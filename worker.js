@@ -1,119 +1,488 @@
-const HTML_B64 = "PCFkb2N0eXBlIGh0bWw+CjxodG1sIGxhbmc9InRyIj4KPGhlYWQ+CjxtZXRhIGNoYXJzZXQ9InV0Zi04Ij4KPG1ldGEgbmFtZT0idmlld3BvcnQiIGNvbnRlbnQ9IndpZHRoPWRldmljZS13aWR0aCxpbml0aWFsLXNjYWxlPTEiPgo8dGl0bGU+UlNNIEdheXJpbWVua3VsIENSTTwvdGl0bGU+CjxzdHlsZT4KOnJvb3R7LS1uOiMwYjIzNDc7LS1iOiMxNDU5YTY7LS1iZzojZjRmN2ZiOy0tYzojZmZmOy0tdDojMTcyMjNiOy0tbTojNmI3MjgwOy0tbDojZTVlN2VifQoqe2JveC1zaXppbmc6Ym9yZGVyLWJveH1ib2R5e21hcmdpbjowO2ZvbnQtZmFtaWx5OnN5c3RlbS11aSwtYXBwbGUtc3lzdGVtLFNlZ29lIFVJLEFyaWFsO2JhY2tncm91bmQ6dmFyKC0tYmcpO2NvbG9yOnZhcigtLXQpfQouYXBwe21pbi1oZWlnaHQ6MTAwdmg7ZGlzcGxheTpncmlkO2dyaWQtdGVtcGxhdGUtY29sdW1uczoyMzBweCAxZnJ9LnNpZGV7YmFja2dyb3VuZDp2YXIoLS1uKTtjb2xvcjojZmZmO3BhZGRpbmc6MThweDtwb3NpdGlvbjpzdGlja3k7dG9wOjA7aGVpZ2h0OjEwMHZofQouYnJhbmR7ZGlzcGxheTpmbGV4O2dhcDoxMHB4O2FsaWduLWl0ZW1zOmNlbnRlcjttYXJnaW4tYm90dG9tOjIycHh9LmxvZ297d2lkdGg6NDhweDtoZWlnaHQ6NDhweDtiYWNrZ3JvdW5kOiNmZmY7Y29sb3I6dmFyKC0tbik7Ym9yZGVyLXJhZGl1czoxNHB4O2Rpc3BsYXk6Z3JpZDtwbGFjZS1pdGVtczpjZW50ZXI7Zm9udC13ZWlnaHQ6OTAwfQouYnJhbmQgc21hbGx7ZGlzcGxheTpibG9jaztvcGFjaXR5Oi43fS5uYXZ7ZGlzcGxheTpncmlkO2dhcDo2cHh9Lm5hdiBidXR0b257Ym9yZGVyOjA7YmFja2dyb3VuZDp0cmFuc3BhcmVudDtjb2xvcjp3aGl0ZTt0ZXh0LWFsaWduOmxlZnQ7cGFkZGluZzoxMnB4O2JvcmRlci1yYWRpdXM6MTBweDtmb250OmluaGVyaXQ7Y3Vyc29yOnBvaW50ZXJ9Lm5hdiBidXR0b24uYWN0aXZle2JhY2tncm91bmQ6cmdiYSgyNTUsMjU1LDI1NSwuMTIpfQptYWlue3BhZGRpbmc6MjBweDttaW4td2lkdGg6MH0udG9we2Rpc3BsYXk6ZmxleDtnYXA6MTBweDthbGlnbi1pdGVtczpjZW50ZXI7bWFyZ2luLWJvdHRvbToxOHB4fS50b3AgaDF7bWFyZ2luOjB9LnRvcCBwe21hcmdpbjo0cHggMCAwO2NvbG9yOnZhcigtLW0pfQoubWVudXtkaXNwbGF5Om5vbmV9LnNlY3tkaXNwbGF5Om5vbmV9LnNlYy5hY3RpdmV7ZGlzcGxheTpibG9ja30uZ3JpZDR7ZGlzcGxheTpncmlkO2dyaWQtdGVtcGxhdGUtY29sdW1uczpyZXBlYXQoNCwxZnIpO2dhcDoxMnB4fS5ncmlkMntkaXNwbGF5OmdyaWQ7Z3JpZC10ZW1wbGF0ZS1jb2x1bW5zOjFmciAxZnI7Z2FwOjEycHg7bWFyZ2luLXRvcDoxMnB4fQouY2FyZHtiYWNrZ3JvdW5kOnZhcigtLWMpO2JvcmRlcjoxcHggc29saWQgdmFyKC0tbCk7Ym9yZGVyLXJhZGl1czoxNnB4O3BhZGRpbmc6MTZweH0uc3RhdCBie2ZvbnQtc2l6ZToyOHB4O2Rpc3BsYXk6YmxvY2t9Lm11dGVke2NvbG9yOnZhcigtLW0pfQoudG9vbGJhcntkaXNwbGF5OmZsZXg7anVzdGlmeS1jb250ZW50OnNwYWNlLWJldHdlZW47YWxpZ24taXRlbXM6Y2VudGVyO2dhcDoxMHB4O21hcmdpbjowIDAgMTJweH0uYnRue2JvcmRlcjowO2JhY2tncm91bmQ6dmFyKC0tYik7Y29sb3I6d2hpdGU7cGFkZGluZzoxMHB4IDEzcHg7Ym9yZGVyLXJhZGl1czoxMHB4O2ZvbnQtd2VpZ2h0OjcwMDtjdXJzb3I6cG9pbnRlcn0KLmJ0bi5ne2JhY2tncm91bmQ6I2VlZjNmOTtjb2xvcjp2YXIoLS10KX0uYnRuLmR7YmFja2dyb3VuZDojZmZmMGVmO2NvbG9yOiNiNDIzMTh9CmlucHV0LHNlbGVjdCx0ZXh0YXJlYXt3aWR0aDoxMDAlO3BhZGRpbmc6MTFweDtib3JkZXI6MXB4IHNvbGlkICNkN2RlZWE7Ym9yZGVyLXJhZGl1czoxMHB4O2ZvbnQ6aW5oZXJpdDtiYWNrZ3JvdW5kOndoaXRlfWxhYmVse2Rpc3BsYXk6Z3JpZDtnYXA6NnB4O2ZvbnQtd2VpZ2h0OjY1MDtjb2xvcjojMzc0MTUxfS5mZ3tkaXNwbGF5OmdyaWQ7Z3JpZC10ZW1wbGF0ZS1jb2x1bW5zOjFmciAxZnI7Z2FwOjEycHh9LndpZGV7Z3JpZC1jb2x1bW46MS8tMX0KLnRhYmxle292ZXJmbG93OmF1dG99LnRhYmxlIHRhYmxle3dpZHRoOjEwMCU7Ym9yZGVyLWNvbGxhcHNlOmNvbGxhcHNlO21pbi13aWR0aDo4MDBweH10aCx0ZHtwYWRkaW5nOjEycHg7Ym9yZGVyLWJvdHRvbToxcHggc29saWQgdmFyKC0tbCk7dGV4dC1hbGlnbjpsZWZ0O3ZlcnRpY2FsLWFsaWduOnRvcH10aHtmb250LXNpemU6MTNweDtjb2xvcjp2YXIoLS1tKX0KLnJvd3tkaXNwbGF5OmZsZXg7anVzdGlmeS1jb250ZW50OnNwYWNlLWJldHdlZW47Z2FwOjEwcHg7cGFkZGluZzoxMnB4IDA7Ym9yZGVyLXRvcDoxcHggc29saWQgdmFyKC0tbCl9LnJvdzpmaXJzdC1jaGlsZHtib3JkZXItdG9wOjB9LnJvdyBzbWFsbCx0ZCBzbWFsbHtkaXNwbGF5OmJsb2NrO2NvbG9yOnZhcigtLW0pO21hcmdpbi10b3A6M3B4fS5iYWRnZXtkaXNwbGF5OmlubGluZS1ibG9jaztwYWRkaW5nOjVweCA5cHg7Ym9yZGVyLXJhZGl1czo5OTlweDtiYWNrZ3JvdW5kOiNlZGY0ZmY7Zm9udC1zaXplOjEycHh9Ci5tb2RhbHtwb3NpdGlvbjpmaXhlZDtpbnNldDowO2JhY2tncm91bmQ6IzAwMTk7ZGlzcGxheTpub25lO2FsaWduLWl0ZW1zOmNlbnRlcjtqdXN0aWZ5LWNvbnRlbnQ6Y2VudGVyO3BhZGRpbmc6MTZweDt6LWluZGV4OjMwfS5tb2RhbC5vbntkaXNwbGF5OmZsZXh9LmJveHtiYWNrZ3JvdW5kOndoaXRlO2JvcmRlci1yYWRpdXM6MThweDtwYWRkaW5nOjE4cHg7d2lkdGg6bWluKDc2MHB4LDEwMCUpO21heC1oZWlnaHQ6OTB2aDtvdmVyZmxvdzphdXRvfQoubWh7ZGlzcGxheTpmbGV4O2p1c3RpZnktY29udGVudDpzcGFjZS1iZXR3ZWVuO2FsaWduLWl0ZW1zOmNlbnRlcn0uc2NvcmV7bWluLXdpZHRoOjUwcHg7aGVpZ2h0OjUwcHg7Ym9yZGVyLXJhZGl1czo1MCU7ZGlzcGxheTpncmlkO3BsYWNlLWl0ZW1zOmNlbnRlcjtiYWNrZ3JvdW5kOiNlZGY0ZmY7Y29sb3I6dmFyKC0tYik7Zm9udC13ZWlnaHQ6OTAwfQpAbWVkaWEobWF4LXdpZHRoOjkwMHB4KXsuYXBwe2Rpc3BsYXk6YmxvY2t9LnNpZGV7cG9zaXRpb246Zml4ZWQ7bGVmdDotMjUwcHg7d2lkdGg6MjMwcHg7ei1pbmRleDoyNTt0cmFuc2l0aW9uOi4yc30ub3BlbiAuc2lkZXtsZWZ0OjB9Lm1lbnV7ZGlzcGxheTpibG9jaztib3JkZXI6MDtiYWNrZ3JvdW5kOndoaXRlO3BhZGRpbmc6MTBweDtib3JkZXItcmFkaXVzOjEwcHh9LmdyaWQ0e2dyaWQtdGVtcGxhdGUtY29sdW1uczoxZnIgMWZyfS5ncmlkMiwuZmd7Z3JpZC10ZW1wbGF0ZS1jb2x1bW5zOjFmcn0ud2lkZXtncmlkLWNvbHVtbjphdXRvfW1haW57cGFkZGluZzoxNHB4fX0KPC9zdHlsZT4KPC9oZWFkPgo8Ym9keT4KPGRpdiBpZD0iYXBwIiBjbGFzcz0iYXBwIj4KPGFzaWRlIGNsYXNzPSJzaWRlIj4KPGRpdiBjbGFzcz0iYnJhbmQiPjxkaXYgY2xhc3M9ImxvZ28iPlJTTTwvZGl2PjxkaXY+PGI+UlNNIEdheXJpbWVua3VsPC9iPjxzbWFsbD5DUk08L3NtYWxsPjwvZGl2PjwvZGl2Pgo8ZGl2IGNsYXNzPSJuYXYiPgo8YnV0dG9uIGNsYXNzPSJhY3RpdmUiIGRhdGEtdGFiPSJob21lIj7wn4+gIEFuYSBQYW5lbDwvYnV0dG9uPgo8YnV0dG9uIGRhdGEtdGFiPSJjdXN0b21lcnMiPvCfkaUgTcO8xZ90ZXJpbGVyPC9idXR0b24+CjxidXR0b24gZGF0YS10YWI9Im93bmVycyI+8J+Pt++4jyBNw7xsayBTYWhpcGxlcmk8L2J1dHRvbj4KPGJ1dHRvbiBkYXRhLXRhYj0icHJvcGVydGllcyI+8J+PoiBQb3J0ZsO2eWxlcjwvYnV0dG9uPgo8YnV0dG9uIGRhdGEtdGFiPSJkZW1hbmRzIj7wn46vIFRhbGVwbGVyPC9idXR0b24+CjxidXR0b24gZGF0YS10YWI9InRhc2tzIj7wn5OMIFRha2lwbGVyPC9idXR0b24+CjxidXR0b24gZGF0YS10YWI9Im1hdGNoZXMiPvCflJcgRcWfbGXFn3Rpcm1lPC9idXR0b24+CjwvZGl2Pgo8L2FzaWRlPgo8bWFpbj4KPGRpdiBjbGFzcz0idG9wIj48YnV0dG9uIGNsYXNzPSJtZW51IiBvbmNsaWNrPSJkb2N1bWVudC5nZXRFbGVtZW50QnlJZCgnYXBwJykuY2xhc3NMaXN0LnRvZ2dsZSgnb3BlbicpIj7imLA8L2J1dHRvbj48ZGl2PjxoMSBpZD0idGl0bGUiPkFuYSBQYW5lbDwvaDE+PHA+UlNNIEdheXJpbWVua3VsIG3DvMWfdGVyaSB2ZSBwb3J0ZsO2eSB5w7ZuZXRpbWk8L3A+PC9kaXY+PC9kaXY+CjxzZWN0aW9uIGlkPSJob21lIiBjbGFzcz0ic2VjIGFjdGl2ZSI+CjxkaXYgY2xhc3M9ImdyaWQ0Ij4KPGRpdiBjbGFzcz0iY2FyZCBzdGF0Ij48YiBpZD0ibkN1c3RvbWVycyI+MDwvYj48c3Bhbj5Nw7zFn3Rlcmk8L3NwYW4+PC9kaXY+CjxkaXYgY2xhc3M9ImNhcmQgc3RhdCI+PGIgaWQ9Im5Qcm9wZXJ0aWVzIj4wPC9iPjxzcGFuPkFrdGlmIFBvcnRmw7Z5PC9zcGFuPjwvZGl2Pgo8ZGl2IGNsYXNzPSJjYXJkIHN0YXQiPjxiIGlkPSJuVGFza3MiPjA8L2I+PHNwYW4+QcOnxLFrIFRha2lwPC9zcGFuPjwvZGl2Pgo8ZGl2IGNsYXNzPSJjYXJkIHN0YXQiPjxiIGlkPSJuRGVtYW5kcyI+MDwvYj48c3Bhbj5Ba3RpZiBUYWxlcDwvc3Bhbj48L2Rpdj4KPC9kaXY+CjxkaXYgY2xhc3M9ImdyaWQyIj4KPGRpdiBjbGFzcz0iY2FyZCI+PGRpdiBjbGFzcz0idG9vbGJhciI+PGI+U29uIE3DvMWfdGVyaWxlcjwvYj48YnV0dG9uIGNsYXNzPSJidG4iIG9uY2xpY2s9ImZvcm1PcGVuKCdjdXN0b21lcicpIj4rIFllbmk8L2J1dHRvbj48L2Rpdj48ZGl2IGlkPSJyZWNlbnRDdXN0b21lcnMiPjwvZGl2PjwvZGl2Pgo8ZGl2IGNsYXNzPSJjYXJkIj48ZGl2IGNsYXNzPSJ0b29sYmFyIj48Yj5UYWtpcGxlcjwvYj48YnV0dG9uIGNsYXNzPSJidG4iIG9uY2xpY2s9ImZvcm1PcGVuKCd0YXNrJykiPisgVGFraXA8L2J1dHRvbj48L2Rpdj48ZGl2IGlkPSJyZWNlbnRUYXNrcyI+PC9kaXY+PC9kaXY+CjwvZGl2Pgo8L3NlY3Rpb24+Cgo8c2VjdGlvbiBpZD0iY3VzdG9tZXJzIiBjbGFzcz0ic2VjIj4KPGRpdiBjbGFzcz0idG9vbGJhciI+PGlucHV0IGlkPSJjcyIgcGxhY2Vob2xkZXI9Ik3DvMWfdGVyaSBhcmEiPjxidXR0b24gY2xhc3M9ImJ0biIgb25jbGljaz0iZm9ybU9wZW4oJ2N1c3RvbWVyJykiPisgWWVuaSBNw7zFn3Rlcmk8L2J1dHRvbj48L2Rpdj4KPGRpdiBjbGFzcz0iY2FyZCB0YWJsZSI+PHRhYmxlPjx0aGVhZD48dHI+PHRoPkFkIFNveWFkPC90aD48dGg+Um9sPC90aD48dGg+VGVsZWZvbjwvdGg+PHRoPkLDtmxnZTwvdGg+PHRoPkLDvHTDp2U8L3RoPjx0aD5PZGE8L3RoPjx0aD48L3RoPjwvdHI+PC90aGVhZD48dGJvZHkgaWQ9ImN1c3RvbWVyUm93cyI+PC90Ym9keT48L3RhYmxlPjwvZGl2Pgo8L3NlY3Rpb24+Cgo8c2VjdGlvbiBpZD0ib3duZXJzIiBjbGFzcz0ic2VjIj4KPGRpdiBjbGFzcz0idG9vbGJhciI+PHNwYW4+PC9zcGFuPjxidXR0b24gY2xhc3M9ImJ0biIgb25jbGljaz0iZm9ybU9wZW4oJ293bmVyJykiPisgWWVuaSBNw7xsayBTYWhpYmk8L2J1dHRvbj48L2Rpdj4KPGRpdiBjbGFzcz0iY2FyZCB0YWJsZSI+PHRhYmxlPjx0aGVhZD48dHI+PHRoPkFkIFNveWFkPC90aD48dGg+VGVsZWZvbjwvdGg+PHRoPkLDtmxnZTwvdGg+PHRoPk5vdDwvdGg+PHRoPjwvdGg+PC90cj48L3RoZWFkPjx0Ym9keSBpZD0ib3duZXJSb3dzIj48L3Rib2R5PjwvdGFibGU+PC9kaXY+Cjwvc2VjdGlvbj4KCjxzZWN0aW9uIGlkPSJwcm9wZXJ0aWVzIiBjbGFzcz0ic2VjIj4KPGRpdiBjbGFzcz0idG9vbGJhciI+PGlucHV0IGlkPSJwcyIgcGxhY2Vob2xkZXI9IlBvcnRmw7Z5IGFyYSI+PGJ1dHRvbiBjbGFzcz0iYnRuIiBvbmNsaWNrPSJmb3JtT3BlbigncHJvcGVydHknKSI+KyBZZW5pIFBvcnRmw7Z5PC9idXR0b24+PC9kaXY+CjxkaXYgY2xhc3M9ImNhcmQgdGFibGUiPjx0YWJsZT48dGhlYWQ+PHRyPjx0aD5Qb3J0ZsO2eTwvdGg+PHRoPkR1cnVtPC90aD48dGg+QsO2bGdlPC90aD48dGg+Rml5YXQ8L3RoPjx0aD5PZGEgLyBtwrI8L3RoPjx0aD5Nw7xsayBTYWhpYmk8L3RoPjx0aD48L3RoPjwvdHI+PC90aGVhZD48dGJvZHkgaWQ9InByb3BlcnR5Um93cyI+PC90Ym9keT48L3RhYmxlPjwvZGl2Pgo8L3NlY3Rpb24+Cgo8c2VjdGlvbiBpZD0iZGVtYW5kcyIgY2xhc3M9InNlYyI+CjxkaXYgY2xhc3M9InRvb2xiYXIiPjxzcGFuPjwvc3Bhbj48YnV0dG9uIGNsYXNzPSJidG4iIG9uY2xpY2s9ImZvcm1PcGVuKCdkZW1hbmQnKSI+KyBZZW5pIFRhbGVwPC9idXR0b24+PC9kaXY+CjxkaXYgY2xhc3M9ImNhcmQgdGFibGUiPjx0YWJsZT48dGhlYWQ+PHRyPjx0aD5Nw7zFn3Rlcmk8L3RoPjx0aD5Uw7xyPC90aD48dGg+QsO2bGdlPC90aD48dGg+QsO8dMOnZTwvdGg+PHRoPk9kYTwvdGg+PHRoPkR1cnVtPC90aD48dGg+PC90aD48L3RyPjwvdGhlYWQ+PHRib2R5IGlkPSJkZW1hbmRSb3dzIj48L3Rib2R5PjwvdGFibGU+PC9kaXY+Cjwvc2VjdGlvbj4KCjxzZWN0aW9uIGlkPSJ0YXNrcyIgY2xhc3M9InNlYyI+CjxkaXYgY2xhc3M9InRvb2xiYXIiPjxzcGFuPjwvc3Bhbj48YnV0dG9uIGNsYXNzPSJidG4iIG9uY2xpY2s9ImZvcm1PcGVuKCd0YXNrJykiPisgWWVuaSBUYWtpcDwvYnV0dG9uPjwvZGl2PjxkaXYgaWQ9InRhc2tSb3dzIiBjbGFzcz0iY2FyZCI+PC9kaXY+Cjwvc2VjdGlvbj4KCjxzZWN0aW9uIGlkPSJtYXRjaGVzIiBjbGFzcz0ic2VjIj48ZGl2IGlkPSJtYXRjaFJvd3MiPjwvZGl2Pjwvc2VjdGlvbj4KPC9tYWluPgo8L2Rpdj4KCjxkaXYgaWQ9Im1vZGFsIiBjbGFzcz0ibW9kYWwiPgo8ZGl2IGNsYXNzPSJib3giPgo8ZGl2IGNsYXNzPSJtaCI+PGgyIGlkPSJtdCI+WWVuaSBLYXnEsXQ8L2gyPjxidXR0b24gY2xhc3M9ImJ0biBnIiBvbmNsaWNrPSJjbG9zZU0oKSI+S2FwYXQ8L2J1dHRvbj48L2Rpdj4KPGZvcm0gaWQ9ImZybSI+PC9mb3JtPgo8L2Rpdj4KPC9kaXY+Cgo8c2NyaXB0Pgp2YXIgUz17Y3VzdG9tZXJzOltdLG93bmVyczpbXSxwcm9wZXJ0aWVzOltdLGRlbWFuZHM6W10sdGFza3M6W119Owp2YXIgbmFtZXM9e2hvbWU6IkFuYSBQYW5lbCIsY3VzdG9tZXJzOiJNw7zFn3RlcmlsZXIiLG93bmVyczoiTcO8bGsgU2FoaXBsZXJpIixwcm9wZXJ0aWVzOiJQb3J0ZsO2eWxlciIsZGVtYW5kczoiVGFsZXBsZXIiLHRhc2tzOiJUYWtpcGxlciIsbWF0Y2hlczoiRcWfbGXFn3Rpcm1lIn07Cgpkb2N1bWVudC5xdWVyeVNlbGVjdG9yQWxsKCJbZGF0YS10YWJdIikuZm9yRWFjaChmdW5jdGlvbihiKXsKICBiLm9uY2xpY2s9ZnVuY3Rpb24oKXsgdGFiKGIuZGF0YXNldC50YWIpOyB9Owp9KTsKCmZ1bmN0aW9uIHRhYih0KXsKICBkb2N1bWVudC5xdWVyeVNlbGVjdG9yQWxsKCIuc2VjIikuZm9yRWFjaChmdW5jdGlvbih4KXt4LmNsYXNzTGlzdC5yZW1vdmUoImFjdGl2ZSIpO30pOwogIGRvY3VtZW50LmdldEVsZW1lbnRCeUlkKHQpLmNsYXNzTGlzdC5hZGQoImFjdGl2ZSIpOwogIGRvY3VtZW50LnF1ZXJ5U2VsZWN0b3JBbGwoIltkYXRhLXRhYl0iKS5mb3JFYWNoKGZ1bmN0aW9uKHgpe3guY2xhc3NMaXN0LnRvZ2dsZSgiYWN0aXZlIix4LmRhdGFzZXQudGFiPT09dCk7fSk7CiAgZG9jdW1lbnQuZ2V0RWxlbWVudEJ5SWQoInRpdGxlIikudGV4dENvbnRlbnQ9bmFtZXNbdF07CiAgZG9jdW1lbnQuZ2V0RWxlbWVudEJ5SWQoImFwcCIpLmNsYXNzTGlzdC5yZW1vdmUoIm9wZW4iKTsKICBpZih0PT09Im1hdGNoZXMiKSBtYXRjaGVzKCk7Cn0KCmZ1bmN0aW9uIGVzYyhzKXsKICByZXR1cm4gU3RyaW5nKHM9PW51bGw/IiI6cykucmVwbGFjZSgvWyY8PiInXS9nLGZ1bmN0aW9uKG0pewogICAgcmV0dXJuIHsiJiI6IiZhbXA7IiwiPCI6IiZsdDsiLCI+IjoiJmd0OyIsJyInOiImcXVvdDsiLCInIjoiJiMzOTsifVttXTsKICB9KTsKfQpmdW5jdGlvbiBtb25leShuKXtyZXR1cm4gbj9uZXcgSW50bC5OdW1iZXJGb3JtYXQoInRyLVRSIikuZm9ybWF0KG4pKyIgVEwiOiItIjt9Cgphc3luYyBmdW5jdGlvbiBhcGkocCxvKXsKICBvPW98fHt9OwogIHZhciByPWF3YWl0IGZldGNoKCIvYXBpIitwLE9iamVjdC5hc3NpZ24oe2hlYWRlcnM6eyJjb250ZW50LXR5cGUiOiJhcHBsaWNhdGlvbi9qc29uIn19LG8pKTsKICBpZighci5vaykgdGhyb3cgbmV3IEVycm9yKGF3YWl0IHIudGV4dCgpKTsKICByZXR1cm4gci5qc29uKCk7Cn0KYXN5bmMgZnVuY3Rpb24gbG9hZCgpewogIHZhciBkPWF3YWl0IGFwaSgiL2FsbCIpOwogIE9iamVjdC5hc3NpZ24oUyxkKTsKICByZW5kZXIoKTsKfQpmdW5jdGlvbiByZW5kZXIoKXsKICBkb2N1bWVudC5nZXRFbGVtZW50QnlJZCgibkN1c3RvbWVycyIpLnRleHRDb250ZW50PVMuY3VzdG9tZXJzLmxlbmd0aDsKICBkb2N1bWVudC5nZXRFbGVtZW50QnlJZCgiblByb3BlcnRpZXMiKS50ZXh0Q29udGVudD1TLnByb3BlcnRpZXMuZmlsdGVyKGZ1bmN0aW9uKHgpe3JldHVybiB4LnN0YXR1cz09PSJBa3RpZiI7fSkubGVuZ3RoOwogIGRvY3VtZW50LmdldEVsZW1lbnRCeUlkKCJuVGFza3MiKS50ZXh0Q29udGVudD1TLnRhc2tzLmZpbHRlcihmdW5jdGlvbih4KXtyZXR1cm4geC5zdGF0dXM9PT0iQcOnxLFrIjt9KS5sZW5ndGg7CiAgZG9jdW1lbnQuZ2V0RWxlbWVudEJ5SWQoIm5EZW1hbmRzIikudGV4dENvbnRlbnQ9Uy5kZW1hbmRzLmZpbHRlcihmdW5jdGlvbih4KXtyZXR1cm4geC5zdGF0dXM9PT0iQWt0aWYiO30pLmxlbmd0aDsKCiAgdmFyIHJjPVMuY3VzdG9tZXJzLnNsaWNlKDAsNSkubWFwKGZ1bmN0aW9uKHgpewogICAgcmV0dXJuICc8ZGl2IGNsYXNzPSJyb3ciPjxkaXY+PGI+Jytlc2MoeC5uYW1lKSsnPC9iPjxzbWFsbD4nK2VzYyh4LnBob25lKSsnIMK3ICcrZXNjKHguZGlzdHJpY3R8fCIiKSsnICcrZXNjKHgubmVpZ2hib3Job29kfHwiIikrJzwvc21hbGw+PC9kaXY+PC9kaXY+JzsKICB9KS5qb2luKCIiKTsKICBkb2N1bWVudC5nZXRFbGVtZW50QnlJZCgicmVjZW50Q3VzdG9tZXJzIikuaW5uZXJIVE1MPXJjfHwnPGRpdiBjbGFzcz0ibXV0ZWQiPkhlbsO8eiBtw7zFn3RlcmkgeW9rLjwvZGl2Pic7CgogIHZhciBydD1TLnRhc2tzLmZpbHRlcihmdW5jdGlvbih4KXtyZXR1cm4geC5zdGF0dXM9PT0iQcOnxLFrIjt9KS5zbGljZSgwLDUpLm1hcChmdW5jdGlvbih4KXsKICAgIHJldHVybiAnPGRpdiBjbGFzcz0icm93Ij48ZGl2PjxiPicrZXNjKHgudGl0bGUpKyc8L2I+PHNtYWxsPicrZXNjKHguZHVlX2RhdGV8fCJUYXJpaCB5b2siKSsnPC9zbWFsbD48L2Rpdj48YnV0dG9uIGNsYXNzPSJidG4gZyIgb25jbGljaz0iZG9uZSgnK3guaWQrJykiPuKckzwvYnV0dG9uPjwvZGl2Pic7CiAgfSkuam9pbigiIik7CiAgZG9jdW1lbnQuZ2V0RWxlbWVudEJ5SWQoInJlY2VudFRhc2tzIikuaW5uZXJIVE1MPXJ0fHwnPGRpdiBjbGFzcz0ibXV0ZWQiPkHDp8SxayB0YWtpcCB5b2suPC9kaXY+JzsKCiAgY3VzdCgpOyBvd25lcnMoKTsgcHJvcHMoKTsgZGVtYW5kcygpOyB0YXNrcygpOwp9CmZ1bmN0aW9uIGN1c3QoKXsKICB2YXIgcT0oZG9jdW1lbnQuZ2V0RWxlbWVudEJ5SWQoImNzIikudmFsdWV8fCIiKS50b0xvd2VyQ2FzZSgpOwogIHZhciBhPVMuY3VzdG9tZXJzLmZpbHRlcihmdW5jdGlvbih4KXsKICAgIHJldHVybiAhcXx8W3gubmFtZSx4LnBob25lLHguZGlzdHJpY3QseC5uZWlnaGJvcmhvb2RdLmpvaW4oIiAiKS50b0xvd2VyQ2FzZSgpLmluY2x1ZGVzKHEpOwogIH0pOwogIGRvY3VtZW50LmdldEVsZW1lbnRCeUlkKCJjdXN0b21lclJvd3MiKS5pbm5lckhUTUw9YS5tYXAoZnVuY3Rpb24oeCl7CiAgICByZXR1cm4gJzx0cj48dGQ+PGI+Jytlc2MoeC5uYW1lKSsnPC9iPjxzbWFsbD4nK2VzYyh4Lm5vdGVzfHwiIikrJzwvc21hbGw+PC90ZD48dGQ+Jytlc2MoeC5yb2xlfHwiIikrJzwvdGQ+PHRkPicrZXNjKHgucGhvbmV8fCIiKSsnPC90ZD48dGQ+Jytlc2MoeC5kaXN0cmljdHx8IiIpKycgLyAnK2VzYyh4Lm5laWdoYm9yaG9vZHx8IiIpKyc8L3RkPjx0ZD4nK21vbmV5KHguYnVkZ2V0X21pbikrJyDigJMgJyttb25leSh4LmJ1ZGdldF9tYXgpKyc8L3RkPjx0ZD4nK2VzYyh4LnJvb21zfHwiIikrJzwvdGQ+PHRkPjxidXR0b24gY2xhc3M9ImJ0biBkIiBvbmNsaWNrPSJkZWxSZWMoXCdjdXN0b21lcnNcJywnK3guaWQrJykiPlNpbDwvYnV0dG9uPjwvdGQ+PC90cj4nOwogIH0pLmpvaW4oIiIpfHwnPHRyPjx0ZCBjb2xzcGFuPSI3Ij5LYXnEsXQgeW9rLjwvdGQ+PC90cj4nOwp9CmZ1bmN0aW9uIG93bmVycygpewogIGRvY3VtZW50LmdldEVsZW1lbnRCeUlkKCJvd25lclJvd3MiKS5pbm5lckhUTUw9Uy5vd25lcnMubWFwKGZ1bmN0aW9uKHgpewogICAgcmV0dXJuICc8dHI+PHRkPjxiPicrZXNjKHgubmFtZSkrJzwvYj48L3RkPjx0ZD4nK2VzYyh4LnBob25lfHwiIikrJzwvdGQ+PHRkPicrZXNjKHguZGlzdHJpY3R8fCIiKSsnIC8gJytlc2MoeC5uZWlnaGJvcmhvb2R8fCIiKSsnPC90ZD48dGQ+Jytlc2MoeC5ub3Rlc3x8IiIpKyc8L3RkPjx0ZD48YnV0dG9uIGNsYXNzPSJidG4gZCIgb25jbGljaz0iZGVsUmVjKFwnb3duZXJzXCcsJyt4LmlkKycpIj5TaWw8L2J1dHRvbj48L3RkPjwvdHI+JzsKICB9KS5qb2luKCIiKXx8Jzx0cj48dGQgY29sc3Bhbj0iNSI+S2F5xLF0IHlvay48L3RkPjwvdHI+JzsKfQpmdW5jdGlvbiBwcm9wcygpewogIHZhciBxPShkb2N1bWVudC5nZXRFbGVtZW50QnlJZCgicHMiKS52YWx1ZXx8IiIpLnRvTG93ZXJDYXNlKCk7CiAgdmFyIGE9Uy5wcm9wZXJ0aWVzLmZpbHRlcihmdW5jdGlvbih4KXsKICAgIHJldHVybiAhcXx8W3gudGl0bGUseC5vd25lcl9uYW1lLHguZGlzdHJpY3QseC5uZWlnaGJvcmhvb2QseC5zaXRlXS5qb2luKCIgIikudG9Mb3dlckNhc2UoKS5pbmNsdWRlcyhxKTsKICB9KTsKICBkb2N1bWVudC5nZXRFbGVtZW50QnlJZCgicHJvcGVydHlSb3dzIikuaW5uZXJIVE1MPWEubWFwKGZ1bmN0aW9uKHgpewogICAgcmV0dXJuICc8dHI+PHRkPjxiPicrZXNjKHgudGl0bGUpKyc8L2I+PHNtYWxsPicrZXNjKHguc2l0ZXx8IiIpKyc8L3NtYWxsPjwvdGQ+PHRkPjxzcGFuIGNsYXNzPSJiYWRnZSI+Jytlc2MoeC50eXBlKSsnIMK3ICcrZXNjKHguc3RhdHVzKSsnPC9zcGFuPjwvdGQ+PHRkPicrZXNjKHguZGlzdHJpY3R8fCIiKSsnIC8gJytlc2MoeC5uZWlnaGJvcmhvb2R8fCIiKSsnPC90ZD48dGQ+PGI+Jyttb25leSh4LnByaWNlKSsnPC9iPjwvdGQ+PHRkPicrZXNjKHgucm9vbXN8fCItIikrJyDCtyAnK2VzYyh4Lm5ldF9tMnx8Ii0iKSsnIG5ldDwvdGQ+PHRkPicrZXNjKHgub3duZXJfbmFtZXx8IiIpKyc8c21hbGw+Jytlc2MoeC5vd25lcl9waG9uZXx8IiIpKyc8L3NtYWxsPjwvdGQ+PHRkPjxidXR0b24gY2xhc3M9ImJ0biBkIiBvbmNsaWNrPSJkZWxSZWMoXCdwcm9wZXJ0aWVzXCcsJyt4LmlkKycpIj5TaWw8L2J1dHRvbj48L3RkPjwvdHI+JzsKICB9KS5qb2luKCIiKXx8Jzx0cj48dGQgY29sc3Bhbj0iNyI+S2F5xLF0IHlvay48L3RkPjwvdHI+JzsKfQpmdW5jdGlvbiBkZW1hbmRzKCl7CiAgZG9jdW1lbnQuZ2V0RWxlbWVudEJ5SWQoImRlbWFuZFJvd3MiKS5pbm5lckhUTUw9Uy5kZW1hbmRzLm1hcChmdW5jdGlvbih4KXsKICAgIHJldHVybiAnPHRyPjx0ZD48Yj4nK2VzYyh4LmN1c3RvbWVyX25hbWV8fCIiKSsnPC9iPjwvdGQ+PHRkPicrZXNjKHgudHlwZSkrJzwvdGQ+PHRkPicrZXNjKHguZGlzdHJpY3R8fCIiKSsnIC8gJytlc2MoeC5uZWlnaGJvcmhvb2R8fCIiKSsnPC90ZD48dGQ+Jyttb25leSh4LmJ1ZGdldF9taW4pKycg4oCTICcrbW9uZXkoeC5idWRnZXRfbWF4KSsnPC90ZD48dGQ+Jytlc2MoeC5yb29tc3x8IiIpKyc8L3RkPjx0ZD48c3BhbiBjbGFzcz0iYmFkZ2UiPicrZXNjKHguc3RhdHVzKSsnPC9zcGFuPjwvdGQ+PHRkPjxidXR0b24gY2xhc3M9ImJ0biBkIiBvbmNsaWNrPSJkZWxSZWMoXCdkZW1hbmRzXCcsJyt4LmlkKycpIj5TaWw8L2J1dHRvbj48L3RkPjwvdHI+JzsKICB9KS5qb2luKCIiKXx8Jzx0cj48dGQgY29sc3Bhbj0iNyI+S2F5xLF0IHlvay48L3RkPjwvdHI+JzsKfQpmdW5jdGlvbiB0YXNrcygpewogIGRvY3VtZW50LmdldEVsZW1lbnRCeUlkKCJ0YXNrUm93cyIpLmlubmVySFRNTD1TLnRhc2tzLm1hcChmdW5jdGlvbih4KXsKICAgIHZhciBhY3Rpb249eC5zdGF0dXM9PT0iQcOnxLFrIj8nPGJ1dHRvbiBjbGFzcz0iYnRuIiBvbmNsaWNrPSJkb25lKCcreC5pZCsnKSI+VGFtYW1sYTwvYnV0dG9uPic6JzxzcGFuIGNsYXNzPSJiYWRnZSI+Jytlc2MoeC5zdGF0dXMpKyc8L3NwYW4+JzsKICAgIHJldHVybiAnPGRpdiBjbGFzcz0icm93IiBzdHlsZT0iJysoeC5zdGF0dXM9PT0iVGFtYW1sYW5kxLEiPyJvcGFjaXR5Oi41NSI6IiIpKyciPjxkaXY+PGI+Jytlc2MoeC50aXRsZSkrJzwvYj48c21hbGw+Jytlc2MoeC50eXBlfHwiIikrJyDCtyAnK2VzYyh4LmR1ZV9kYXRlfHwiVGFyaWggeW9rIikrJyAnK2VzYyh4LmN1c3RvbWVyX25hbWV8fCIiKSsnICcrZXNjKHgucHJvcGVydHlfdGl0bGV8fCIiKSsnPC9zbWFsbD48c21hbGw+Jytlc2MoeC5ub3Rlc3x8IiIpKyc8L3NtYWxsPjwvZGl2PicrYWN0aW9uKyc8L2Rpdj4nOwogIH0pLmpvaW4oIiIpfHwnPGRpdiBjbGFzcz0ibXV0ZWQiPlRha2lwIHlvay48L2Rpdj4nOwp9CmZ1bmN0aW9uIG1hdGNoZXMoKXsKICB2YXIgb3V0PSIiOwogIFMuZGVtYW5kcy5maWx0ZXIoZnVuY3Rpb24oeCl7cmV0dXJuIHguc3RhdHVzPT09IkFrdGlmIjt9KS5mb3JFYWNoKGZ1bmN0aW9uKGQpewogICAgdmFyIG1zPVtdOwogICAgUy5wcm9wZXJ0aWVzLmZpbHRlcihmdW5jdGlvbih4KXtyZXR1cm4geC5zdGF0dXM9PT0iQWt0aWYiO30pLmZvckVhY2goZnVuY3Rpb24ocCl7CiAgICAgIHZhciBzPTAsdz1bXTsKICAgICAgaWYoZC5kaXN0cmljdCYmcC5kaXN0cmljdCYmZC5kaXN0cmljdC50b0xvd2VyQ2FzZSgpPT09cC5kaXN0cmljdC50b0xvd2VyQ2FzZSgpKXtzKz0yMDt3LnB1c2goImlsw6dlIik7fQogICAgICBpZihkLm5laWdoYm9yaG9vZCYmcC5uZWlnaGJvcmhvb2QmJmQubmVpZ2hib3Job29kLnRvTG93ZXJDYXNlKCk9PT1wLm5laWdoYm9yaG9vZC50b0xvd2VyQ2FzZSgpKXtzKz0yNTt3LnB1c2goIm1haGFsbGUiKTt9CiAgICAgIGlmKGQucm9vbXMmJnAucm9vbXMmJmQucm9vbXMudG9Mb3dlckNhc2UoKT09PXAucm9vbXMudG9Mb3dlckNhc2UoKSl7cys9MTU7dy5wdXNoKCJvZGEiKTt9CiAgICAgIGlmKGQucHJvcGVydHlfdHlwZSYmcC5wcm9wZXJ0eV90eXBlJiZkLnByb3BlcnR5X3R5cGU9PT1wLnByb3BlcnR5X3R5cGUpe3MrPTEwO3cucHVzaCgidMO8ciIpO30KICAgICAgaWYocC5wcmljZSYmKCFkLmJ1ZGdldF9taW58fHAucHJpY2U+PWQuYnVkZ2V0X21pbikmJighZC5idWRnZXRfbWF4fHxwLnByaWNlPD1kLmJ1ZGdldF9tYXgpKXtzKz0yMDt3LnB1c2goImLDvHTDp2UiKTt9CiAgICAgIGlmKHAubmV0X20yJiYoIWQubmV0X21pbnx8cC5uZXRfbTI+PWQubmV0X21pbikmJighZC5uZXRfbWF4fHxwLm5ldF9tMjw9ZC5uZXRfbWF4KSl7cys9MTA7dy5wdXNoKCJtwrIiKTt9CiAgICAgIGlmKHM+PTQwKW1zLnB1c2goe3A6cCxzOnMsdzp3fSk7CiAgICB9KTsKICAgIG1zLnNvcnQoZnVuY3Rpb24oYSxiKXtyZXR1cm4gYi5zLWEuczt9KTsKICAgIGlmKG1zLmxlbmd0aCl7CiAgICAgIG91dCs9JzxkaXYgY2xhc3M9ImNhcmQiIHN0eWxlPSJtYXJnaW4tYm90dG9tOjEycHgiPjxoMz4nK2VzYyhkLmN1c3RvbWVyX25hbWV8fCJNw7zFn3RlcmkiKSsnPC9oMz4nOwogICAgICBtcy5zbGljZSgwLDUpLmZvckVhY2goZnVuY3Rpb24obSl7CiAgICAgICAgb3V0Kz0nPGRpdiBjbGFzcz0icm93Ij48ZGl2PjxiPicrZXNjKG0ucC50aXRsZSkrJzwvYj48c21hbGw+Jytlc2MobS5wLmRpc3RyaWN0fHwiIikrJyAvICcrZXNjKG0ucC5uZWlnaGJvcmhvb2R8fCIiKSsnIMK3ICcrbW9uZXkobS5wLnByaWNlKSsnPC9zbWFsbD48c21hbGw+VXl1bTogJyttLncuam9pbigiLCAiKSsnPC9zbWFsbD48L2Rpdj48ZGl2IGNsYXNzPSJzY29yZSI+JScrbS5zKyc8L2Rpdj48L2Rpdj4nOwogICAgICB9KTsKICAgICAgb3V0Kz0nPC9kaXY+JzsKICAgIH0KICB9KTsKICBkb2N1bWVudC5nZXRFbGVtZW50QnlJZCgibWF0Y2hSb3dzIikuaW5uZXJIVE1MPW91dHx8JzxkaXYgY2xhc3M9ImNhcmQgbXV0ZWQiPkhlbsO8eiBlxZ9sZcWfbWUgYnVsdW5hbWFkxLEuPC9kaXY+JzsKfQpkb2N1bWVudC5nZXRFbGVtZW50QnlJZCgiY3MiKS5vbmlucHV0PWN1c3Q7CmRvY3VtZW50LmdldEVsZW1lbnRCeUlkKCJwcyIpLm9uaW5wdXQ9cHJvcHM7CgpmdW5jdGlvbiBGKGwsbix0LGUpe3JldHVybiAnPGxhYmVsPicrbCsnPGlucHV0IG5hbWU9IicrbisnIiB0eXBlPSInKyh0fHwidGV4dCIpKyciICcrKGV8fCIiKSsnPjwvbGFiZWw+Jzt9CmZ1bmN0aW9uIFEobCxuLGEpe3JldHVybiAnPGxhYmVsPicrbCsnPHNlbGVjdCBuYW1lPSInK24rJyI+JythLm1hcChmdW5jdGlvbih4KXtyZXR1cm4gJzxvcHRpb24+Jyt4Kyc8L29wdGlvbj4nO30pLmpvaW4oIiIpKyc8L3NlbGVjdD48L2xhYmVsPic7fQpmdW5jdGlvbiBUKGwsbil7cmV0dXJuICc8bGFiZWwgY2xhc3M9IndpZGUiPicrbCsnPHRleHRhcmVhIG5hbWU9IicrbisnIiByb3dzPSIzIj48L3RleHRhcmVhPjwvbGFiZWw+Jzt9CgpmdW5jdGlvbiBmb3JtT3BlbihrKXsKICB2YXIgYj0iIix0dGw9IiI7CiAgaWYoaz09PSJjdXN0b21lciIpewogICAgdHRsPSJZZW5pIE3DvMWfdGVyaSI7CiAgICBiPUYoIkFkIFNveWFkIiwibmFtZSIsInRleHQiLCJyZXF1aXJlZCIpK0YoIlRlbGVmb24iLCJwaG9uZSIpK1EoIlJvbCIsInJvbGUiLFsiQWzEsWPEsSIsIlNhdMSxY8SxIiwiS2lyYWPEsSIsIk3DvGxrIFNhaGliaSIsIllhdMSxcsSxbWPEsSIsIkRpxJ9lciJdKStGKCLEsGzDp2UiLCJkaXN0cmljdCIpK0YoIk1haGFsbGUiLCJuZWlnaGJvcmhvb2QiKStGKCJNaW4uIELDvHTDp2UiLCJidWRnZXRfbWluIiwibnVtYmVyIikrRigiTWFrcy4gQsO8dMOnZSIsImJ1ZGdldF9tYXgiLCJudW1iZXIiKStGKCJPZGEgU2F5xLFzxLEiLCJyb29tcyIpK0YoIk1pbi4gTmV0IG3CsiIsIm5ldF9taW4iLCJudW1iZXIiKStGKCJNYWtzLiBOZXQgbcKyIiwibmV0X21heCIsIm51bWJlciIpK1QoIk5vdGxhciIsIm5vdGVzIik7CiAgfQogIGlmKGs9PT0ib3duZXIiKXsKICAgIHR0bD0iWWVuaSBNw7xsayBTYWhpYmkiOwogICAgYj1GKCJBZCBTb3lhZCIsIm5hbWUiLCJ0ZXh0IiwicmVxdWlyZWQiKStGKCJUZWxlZm9uIiwicGhvbmUiKStGKCLEsGzDp2UiLCJkaXN0cmljdCIpK0YoIk1haGFsbGUiLCJuZWlnaGJvcmhvb2QiKStUKCJOb3RsYXIiLCJub3RlcyIpOwogIH0KICBpZihrPT09InByb3BlcnR5Iil7CiAgICB0dGw9IlllbmkgUG9ydGbDtnkiOwogICAgYj1GKCJQb3J0ZsO2eSBCYcWfbMSxxJ/EsSIsInRpdGxlIiwidGV4dCIsInJlcXVpcmVkIikrUSgiVMO8ciIsInR5cGUiLFsiU2F0xLFsxLFrIiwiS2lyYWzEsWsiXSkrUSgiRHVydW0iLCJzdGF0dXMiLFsiQWt0aWYiLCJQYXNpZiIsIlNhdMSxbGTEsSIsIktpcmFsYW5kxLEiLCJCZWtsZW1lZGUiXSkrUSgiVGHFn8Sxbm1heiBUw7xyw7wiLCJwcm9wZXJ0eV90eXBlIixbIkRhaXJlIiwiVmlsbGEiLCJBcnNhIiwiRMO8a2thbiIsIk9maXMiLCJCaW5hIiwiVGFybGEiLCJEacSfZXIiXSkrRigixZ5laGlyIiwiY2l0eSIsInRleHQiLCd2YWx1ZT0iS29ueWEiJykrRigixLBsw6dlIiwiZGlzdHJpY3QiKStGKCJNYWhhbGxlIiwibmVpZ2hib3Job29kIikrRigiU2l0ZSAvIEJpbmEiLCJzaXRlIikrRigiRml5YXQiLCJwcmljZSIsIm51bWJlciIpK0YoIk9kYSBTYXnEsXPEsSIsInJvb21zIikrRigiQnLDvHQgbcKyIiwiZ3Jvc3NfbTIiLCJudW1iZXIiKStGKCJOZXQgbcKyIiwibmV0X20yIiwibnVtYmVyIikrRigiS2F0IiwiZmxvb3IiKStGKCJNw7xsayBTYWhpYmkgQWTEsSIsIm93bmVyX25hbWUiKStGKCJNw7xsayBTYWhpYmkgVGVsZWZvbiIsIm93bmVyX3Bob25lIikrVCgiTm90bGFyIiwibm90ZXMiKTsKICB9CiAgaWYoaz09PSJkZW1hbmQiKXsKICAgIHR0bD0iWWVuaSBUYWxlcCI7CiAgICB2YXIgb3B0cz0nPG9wdGlvbiB2YWx1ZT0iIj5TZcOnaW48L29wdGlvbj4nK1MuY3VzdG9tZXJzLm1hcChmdW5jdGlvbihjKXtyZXR1cm4gJzxvcHRpb24gdmFsdWU9IicrYy5pZCsnIj4nK2VzYyhjLm5hbWUpKyc8L29wdGlvbj4nO30pLmpvaW4oIiIpOwogICAgYj0nPGxhYmVsPk3DvMWfdGVyaTxzZWxlY3QgbmFtZT0iY3VzdG9tZXJfaWQiIHJlcXVpcmVkPicrb3B0cysnPC9zZWxlY3Q+PC9sYWJlbD4nK1EoIlTDvHIiLCJ0eXBlIixbIlNhdMSxbMSxayIsIktpcmFsxLFrIl0pK0YoIsSwbMOnZSIsImRpc3RyaWN0IikrRigiTWFoYWxsZSIsIm5laWdoYm9yaG9vZCIpK0YoIk1pbi4gQsO8dMOnZSIsImJ1ZGdldF9taW4iLCJudW1iZXIiKStGKCJNYWtzLiBCw7x0w6dlIiwiYnVkZ2V0X21heCIsIm51bWJlciIpK0YoIk9kYSBTYXnEsXPEsSIsInJvb21zIikrUSgiVGHFn8Sxbm1heiBUw7xyw7wiLCJwcm9wZXJ0eV90eXBlIixbIkRhaXJlIiwiVmlsbGEiLCJBcnNhIiwiRMO8a2thbiIsIk9maXMiLCJCaW5hIiwiVGFybGEiLCJEacSfZXIiXSkrRigiTWluLiBOZXQgbcKyIiwibmV0X21pbiIsIm51bWJlciIpK0YoIk1ha3MuIE5ldCBtwrIiLCJuZXRfbWF4IiwibnVtYmVyIikrUSgiRHVydW0iLCJzdGF0dXMiLFsiQWt0aWYiLCJCZWtsZW1lZGUiLCJTb251w6dsYW5kxLEiXSkrVCgiTm90bGFyIiwibm90ZXMiKTsKICB9CiAgaWYoaz09PSJ0YXNrIil7CiAgICB0dGw9IlllbmkgVGFraXAiOwogICAgdmFyIGNvPSc8b3B0aW9uIHZhbHVlPSIiPlNlw6dtZTwvb3B0aW9uPicrUy5jdXN0b21lcnMubWFwKGZ1bmN0aW9uKGMpe3JldHVybiAnPG9wdGlvbiB2YWx1ZT0iJytjLmlkKyciPicrZXNjKGMubmFtZSkrJzwvb3B0aW9uPic7fSkuam9pbigiIik7CiAgICB2YXIgcG89JzxvcHRpb24gdmFsdWU9IiI+U2XDp21lPC9vcHRpb24+JytTLnByb3BlcnRpZXMubWFwKGZ1bmN0aW9uKHApe3JldHVybiAnPG9wdGlvbiB2YWx1ZT0iJytwLmlkKyciPicrZXNjKHAudGl0bGUpKyc8L29wdGlvbj4nO30pLmpvaW4oIiIpOwogICAgYj1GKCJCYcWfbMSxayIsInRpdGxlIiwidGV4dCIsInJlcXVpcmVkIikrRigiVGFyaWgiLCJkdWVfZGF0ZSIsImRhdGUiKStRKCJUw7xyIiwidHlwZSIsWyJUZWxlZm9uIiwiV2hhdHNBcHAiLCJHw7Zyw7zFn21lIiwiUG9ydGbDtnkgR8O2c3RlcmltaSIsIkV2cmFrIiwiRml5YXQgR8O8bmNlbGxlbWUiLCJEacSfZXIiXSkrJzxsYWJlbD5Nw7zFn3Rlcmk8c2VsZWN0IG5hbWU9ImN1c3RvbWVyX2lkIj4nK2NvKyc8L3NlbGVjdD48L2xhYmVsPjxsYWJlbD5Qb3J0ZsO2eTxzZWxlY3QgbmFtZT0icHJvcGVydHlfaWQiPicrcG8rJzwvc2VsZWN0PjwvbGFiZWw+JytUKCJOb3RsYXIiLCJub3RlcyIpOwogIH0KICBkb2N1bWVudC5nZXRFbGVtZW50QnlJZCgiZnJtIikuaW5uZXJIVE1MPSc8ZGl2IGNsYXNzPSJmZyI+JytiKyc8L2Rpdj48ZGl2IGNsYXNzPSJ0b29sYmFyIiBzdHlsZT0ianVzdGlmeS1jb250ZW50OmZsZXgtZW5kO21hcmdpbi10b3A6MTRweCI+PGJ1dHRvbiB0eXBlPSJidXR0b24iIGNsYXNzPSJidG4gZyIgb25jbGljaz0iY2xvc2VNKCkiPlZhemdlw6c8L2J1dHRvbj48YnV0dG9uIGNsYXNzPSJidG4iPktheWRldDwvYnV0dG9uPjwvZGl2Pic7CiAgZG9jdW1lbnQuZ2V0RWxlbWVudEJ5SWQoIm10IikudGV4dENvbnRlbnQ9dHRsOwogIGRvY3VtZW50LmdldEVsZW1lbnRCeUlkKCJtb2RhbCIpLmNsYXNzTGlzdC5hZGQoIm9uIik7CiAgZG9jdW1lbnQuZ2V0RWxlbWVudEJ5SWQoImZybSIpLm9uc3VibWl0PWFzeW5jIGZ1bmN0aW9uKGV2KXsKICAgIGV2LnByZXZlbnREZWZhdWx0KCk7CiAgICB2YXIgeD1PYmplY3QuZnJvbUVudHJpZXMobmV3IEZvcm1EYXRhKGRvY3VtZW50LmdldEVsZW1lbnRCeUlkKCJmcm0iKSkuZW50cmllcygpKTsKICAgIGF3YWl0IGFwaSgiLyIraysicyIse21ldGhvZDoiUE9TVCIsYm9keTpKU09OLnN0cmluZ2lmeSh4KX0pOwogICAgY2xvc2VNKCk7IGxvYWQoKTsKICB9Owp9CmZ1bmN0aW9uIGNsb3NlTSgpe2RvY3VtZW50LmdldEVsZW1lbnRCeUlkKCJtb2RhbCIpLmNsYXNzTGlzdC5yZW1vdmUoIm9uIik7fQphc3luYyBmdW5jdGlvbiBkZWxSZWMoayxpZCl7CiAgaWYoY29uZmlybSgiQnUga2F5xLF0IHNpbGluc2luIG1pPyIpKXsKICAgIGF3YWl0IGFwaSgiLyIraysiLyIraWQse21ldGhvZDoiREVMRVRFIn0pOwogICAgbG9hZCgpOwogIH0KfQphc3luYyBmdW5jdGlvbiBkb25lKGlkKXsKICBhd2FpdCBhcGkoIi90YXNrcy8iK2lkKyIvZG9uZSIse21ldGhvZDoiUE9TVCJ9KTsKICBsb2FkKCk7Cn0KbG9hZCgpLmNhdGNoKGZ1bmN0aW9uKGUpe2FsZXJ0KCJIYXRhOiAiK2UubWVzc2FnZSk7fSk7Cjwvc2NyaXB0Pgo8L2JvZHk+CjwvaHRtbD4=";
+import { APP_CSS, APP_HTML, APP_JS, ICON_SVG, MANIFEST, SERVICE_WORKER } from "./ui.js";
 
-function decodeHTML() {
-  const bytes = Uint8Array.from(atob(HTML_B64), c => c.charCodeAt(0));
-  return new TextDecoder("utf-8").decode(bytes);
+const INITIAL_PASSWORD_SALT = "Pi_mcJkHom4YbUMqWT_kng";
+const INITIAL_PASSWORD_HASH = "-A4qpnRdNo2BIXBcYB9nZfd7ASTJ63SgF543XNVYwRQ";
+const PBKDF2_ITERATIONS = 210000;
+const SESSION_TTL_SECONDS = 60 * 60 * 24 * 30;
+const LOGIN_WINDOW_SECONDS = 15 * 60;
+const LOGIN_ATTEMPT_LIMIT = 8;
+const SESSION_COOKIE = "rsm_crm_session";
+const encoder = new TextEncoder();
+const schemaPromises = new WeakMap();
+
+const ENTITIES = {
+  customers: {
+    required: ["name"],
+    fields: ["name", "phone", "role", "source", "status", "district", "neighborhood", "budget_min", "budget_max", "rooms", "net_min", "net_max", "notes"],
+    numbers: new Set(["budget_min", "budget_max", "net_min", "net_max"]),
+    defaults: { role: "Alıcı", source: "", status: "Aktif" },
+  },
+  owners: {
+    required: ["name"],
+    fields: ["name", "phone", "district", "neighborhood", "notes"],
+    numbers: new Set(),
+    defaults: {},
+  },
+  properties: {
+    required: ["title"],
+    fields: ["title", "type", "status", "property_type", "city", "district", "neighborhood", "site", "price", "rooms", "gross_m2", "net_m2", "floor", "owner_name", "owner_phone", "listing_no", "listing_date", "source_url", "location_text", "notes"],
+    numbers: new Set(["price", "gross_m2", "net_m2"]),
+    defaults: { type: "Satılık", status: "Aktif", property_type: "Daire", city: "Konya" },
+  },
+  demands: {
+    required: ["customer_id"],
+    fields: ["customer_id", "type", "district", "neighborhood", "budget_min", "budget_max", "rooms", "property_type", "net_min", "net_max", "status", "notes"],
+    numbers: new Set(["customer_id", "budget_min", "budget_max", "net_min", "net_max"]),
+    defaults: { type: "Satılık", property_type: "Daire", status: "Aktif" },
+  },
+  tasks: {
+    required: ["title"],
+    fields: ["title", "due_date", "type", "customer_id", "property_id", "status", "notes"],
+    numbers: new Set(["customer_id", "property_id"]),
+    defaults: { status: "Açık" },
+  },
+};
+
+class HttpError extends Error {
+  constructor(status, message) {
+    super(message);
+    this.status = status;
+  }
 }
 
-async function schema(DB) {
-  const queries = [
-    "CREATE TABLE IF NOT EXISTS customers(id INTEGER PRIMARY KEY AUTOINCREMENT,name TEXT NOT NULL,phone TEXT,role TEXT,district TEXT,neighborhood TEXT,budget_min INTEGER,budget_max INTEGER,rooms TEXT,net_min REAL,net_max REAL,notes TEXT,created_at TEXT DEFAULT CURRENT_TIMESTAMP)",
-    "CREATE TABLE IF NOT EXISTS owners(id INTEGER PRIMARY KEY AUTOINCREMENT,name TEXT NOT NULL,phone TEXT,district TEXT,neighborhood TEXT,notes TEXT,created_at TEXT DEFAULT CURRENT_TIMESTAMP)",
-    "CREATE TABLE IF NOT EXISTS properties(id INTEGER PRIMARY KEY AUTOINCREMENT,title TEXT NOT NULL,type TEXT,status TEXT,property_type TEXT,city TEXT,district TEXT,neighborhood TEXT,site TEXT,price INTEGER,rooms TEXT,gross_m2 REAL,net_m2 REAL,floor TEXT,owner_name TEXT,owner_phone TEXT,notes TEXT,created_at TEXT DEFAULT CURRENT_TIMESTAMP)",
-    "CREATE TABLE IF NOT EXISTS demands(id INTEGER PRIMARY KEY AUTOINCREMENT,customer_id INTEGER,type TEXT,district TEXT,neighborhood TEXT,budget_min INTEGER,budget_max INTEGER,rooms TEXT,property_type TEXT,net_min REAL,net_max REAL,status TEXT,notes TEXT,created_at TEXT DEFAULT CURRENT_TIMESTAMP)",
-    "CREATE TABLE IF NOT EXISTS tasks(id INTEGER PRIMARY KEY AUTOINCREMENT,title TEXT NOT NULL,due_date TEXT,type TEXT,customer_id INTEGER,property_id INTEGER,status TEXT DEFAULT 'Açık',notes TEXT,created_at TEXT DEFAULT CURRENT_TIMESTAMP)"
-  ];
-  for (const q of queries) await DB.prepare(q).run();
+function nowSeconds() {
+  return Math.floor(Date.now() / 1000);
 }
 
-function json(data, status=200) {
+function bytesToBase64Url(bytes) {
+  let binary = "";
+  for (const byte of bytes) binary += String.fromCharCode(byte);
+  return btoa(binary).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/g, "");
+}
+
+function base64UrlToBytes(value) {
+  let normalized = value.replace(/-/g, "+").replace(/_/g, "/");
+  while (normalized.length % 4) normalized += "=";
+  const binary = atob(normalized);
+  return Uint8Array.from(binary, (char) => char.charCodeAt(0));
+}
+
+function randomToken(size = 32) {
+  const bytes = new Uint8Array(size);
+  crypto.getRandomValues(bytes);
+  return bytesToBase64Url(bytes);
+}
+
+async function sha256(value) {
+  const digest = await crypto.subtle.digest("SHA-256", encoder.encode(value));
+  return bytesToBase64Url(new Uint8Array(digest));
+}
+
+async function derivePassword(password, salt) {
+  const key = await crypto.subtle.importKey("raw", encoder.encode(password), "PBKDF2", false, ["deriveBits"]);
+  const bits = await crypto.subtle.deriveBits({
+    name: "PBKDF2",
+    hash: "SHA-256",
+    salt: base64UrlToBytes(salt),
+    iterations: PBKDF2_ITERATIONS,
+  }, key, 256);
+  return bytesToBase64Url(new Uint8Array(bits));
+}
+
+function safeEqual(left, right) {
+  if (typeof left !== "string" || typeof right !== "string" || left.length !== right.length) return false;
+  let diff = 0;
+  for (let i = 0; i < left.length; i += 1) diff |= left.charCodeAt(i) ^ right.charCodeAt(i);
+  return diff === 0;
+}
+
+function parseCookies(request) {
+  const result = {};
+  const raw = request.headers.get("cookie") || "";
+  for (const item of raw.split(";")) {
+    const index = item.indexOf("=");
+    if (index < 1) continue;
+    result[item.slice(0, index).trim()] = decodeURIComponent(item.slice(index + 1).trim());
+  }
+  return result;
+}
+
+function sessionCookie(token, maxAge = SESSION_TTL_SECONDS) {
+  const value = token ? encodeURIComponent(token) : "";
+  return `${SESSION_COOKIE}=${value}; Path=/; HttpOnly; Secure; SameSite=Strict; Max-Age=${maxAge}`;
+}
+
+function securityHeaders(contentType, cacheControl = "no-store") {
+  return {
+    "content-type": contentType,
+    "cache-control": cacheControl,
+    "content-security-policy": "default-src 'self'; base-uri 'self'; connect-src 'self'; font-src 'self'; form-action 'self'; frame-ancestors 'none'; img-src 'self' data:; manifest-src 'self'; object-src 'none'; script-src 'self'; style-src 'self'",
+    "permissions-policy": "camera=(), microphone=(), geolocation=()",
+    "referrer-policy": "no-referrer",
+    "x-content-type-options": "nosniff",
+    "x-frame-options": "DENY",
+  };
+}
+
+function json(data, status = 200, extraHeaders = {}) {
   return new Response(JSON.stringify(data), {
     status,
-    headers: { "content-type": "application/json; charset=utf-8" }
+    headers: { ...securityHeaders("application/json; charset=utf-8"), ...extraHeaders },
   });
 }
 
 async function readBody(request) {
-  try { return await request.json(); } catch { return {}; }
+  const type = request.headers.get("content-type") || "";
+  if (!type.toLowerCase().includes("application/json")) throw new HttpError(415, "JSON içeriği gerekli.");
+  try {
+    return await request.json();
+  } catch {
+    throw new HttpError(400, "Gönderilen veri okunamadı.");
+  }
+}
+
+function validateOrigin(request) {
+  if (["GET", "HEAD", "OPTIONS"].includes(request.method)) return;
+  const origin = request.headers.get("origin");
+  if (origin && origin !== new URL(request.url).origin) throw new HttpError(403, "Geçersiz istek kaynağı.");
+}
+
+function cleanText(value, max = 4000) {
+  if (value === null || value === undefined) return "";
+  return String(value).replace(/\u0000/g, "").trim().slice(0, max);
+}
+
+function cleanNumber(value, field) {
+  if (value === "" || value === null || value === undefined) return null;
+  const number = Number(value);
+  if (!Number.isFinite(number)) throw new HttpError(400, `${field} alanı sayı olmalıdır.`);
+  if (number < 0) throw new HttpError(400, `${field} alanı negatif olamaz.`);
+  if ((field === "id" || field === "customer_id" || field === "property_id") && !Number.isInteger(number)) {
+    throw new HttpError(400, `${field} alanı geçersiz.`);
+  }
+  return number;
+}
+
+function sanitizeEntity(entity, input, allowOrphanDemand = false) {
+  const config = ENTITIES[entity];
+  if (!config) throw new HttpError(404, "Kayıt türü bulunamadı.");
+  const data = {};
+  for (const field of config.fields) {
+    const fallback = Object.prototype.hasOwnProperty.call(config.defaults, field) ? config.defaults[field] : "";
+    data[field] = config.numbers.has(field) ? cleanNumber(input[field], field) : cleanText(input[field] ?? fallback);
+  }
+  for (const field of config.required) {
+    if (allowOrphanDemand && entity === "demands" && field === "customer_id") continue;
+    if (data[field] === "" || data[field] === null) throw new HttpError(400, `${field} alanı zorunludur.`);
+  }
+  if (data.budget_min !== undefined && data.budget_max !== undefined && data.budget_min !== null && data.budget_max !== null && data.budget_min > data.budget_max) {
+    throw new HttpError(400, "Minimum bütçe maksimum bütçeden büyük olamaz.");
+  }
+  if (data.net_min !== undefined && data.net_max !== undefined && data.net_min !== null && data.net_max !== null && data.net_min > data.net_max) {
+    throw new HttpError(400, "Minimum net m² maksimum net m²’den büyük olamaz.");
+  }
+  return data;
+}
+
+async function ensureColumn(DB, table, column, definition) {
+  const info = await DB.prepare(`PRAGMA table_info(${table})`).all();
+  if ((info.results || []).some((row) => row.name === column)) return;
+  await DB.prepare(`ALTER TABLE ${table} ADD COLUMN ${column} ${definition}`).run();
+  if (column === "updated_at") await DB.prepare(`UPDATE ${table} SET updated_at=created_at WHERE updated_at IS NULL`).run();
+}
+
+async function buildSchema(DB) {
+  const queries = [
+    "CREATE TABLE IF NOT EXISTS customers(id INTEGER PRIMARY KEY AUTOINCREMENT,name TEXT NOT NULL,phone TEXT,role TEXT,source TEXT DEFAULT '',status TEXT DEFAULT 'Aktif',district TEXT,neighborhood TEXT,budget_min INTEGER,budget_max INTEGER,rooms TEXT,net_min REAL,net_max REAL,notes TEXT,created_at TEXT DEFAULT CURRENT_TIMESTAMP,updated_at TEXT DEFAULT CURRENT_TIMESTAMP)",
+    "CREATE TABLE IF NOT EXISTS owners(id INTEGER PRIMARY KEY AUTOINCREMENT,name TEXT NOT NULL,phone TEXT,district TEXT,neighborhood TEXT,notes TEXT,created_at TEXT DEFAULT CURRENT_TIMESTAMP,updated_at TEXT DEFAULT CURRENT_TIMESTAMP)",
+    "CREATE TABLE IF NOT EXISTS properties(id INTEGER PRIMARY KEY AUTOINCREMENT,title TEXT NOT NULL,type TEXT,status TEXT,property_type TEXT,city TEXT,district TEXT,neighborhood TEXT,site TEXT,price INTEGER,rooms TEXT,gross_m2 REAL,net_m2 REAL,floor TEXT,owner_name TEXT,owner_phone TEXT,listing_no TEXT,listing_date TEXT,source_url TEXT,location_text TEXT,notes TEXT,created_at TEXT DEFAULT CURRENT_TIMESTAMP,updated_at TEXT DEFAULT CURRENT_TIMESTAMP)",
+    "CREATE TABLE IF NOT EXISTS demands(id INTEGER PRIMARY KEY AUTOINCREMENT,customer_id INTEGER,type TEXT,district TEXT,neighborhood TEXT,budget_min INTEGER,budget_max INTEGER,rooms TEXT,property_type TEXT,net_min REAL,net_max REAL,status TEXT,notes TEXT,created_at TEXT DEFAULT CURRENT_TIMESTAMP,updated_at TEXT DEFAULT CURRENT_TIMESTAMP)",
+    "CREATE TABLE IF NOT EXISTS tasks(id INTEGER PRIMARY KEY AUTOINCREMENT,title TEXT NOT NULL,due_date TEXT,type TEXT,customer_id INTEGER,property_id INTEGER,status TEXT DEFAULT 'Açık',notes TEXT,created_at TEXT DEFAULT CURRENT_TIMESTAMP,updated_at TEXT DEFAULT CURRENT_TIMESTAMP)",
+    "CREATE TABLE IF NOT EXISTS app_settings(key TEXT PRIMARY KEY,value TEXT NOT NULL,updated_at TEXT DEFAULT CURRENT_TIMESTAMP)",
+    "CREATE TABLE IF NOT EXISTS sessions(id TEXT PRIMARY KEY,token_hash TEXT UNIQUE NOT NULL,created_at INTEGER NOT NULL,expires_at INTEGER NOT NULL)",
+    "CREATE TABLE IF NOT EXISTS login_attempts(id INTEGER PRIMARY KEY AUTOINCREMENT,ip_hash TEXT NOT NULL,attempted_at INTEGER NOT NULL)",
+    "CREATE INDEX IF NOT EXISTS idx_sessions_token ON sessions(token_hash)",
+    "CREATE INDEX IF NOT EXISTS idx_login_attempts_ip ON login_attempts(ip_hash,attempted_at)",
+    "CREATE INDEX IF NOT EXISTS idx_tasks_due_date ON tasks(status,due_date)",
+    "CREATE INDEX IF NOT EXISTS idx_properties_status ON properties(status,district,neighborhood)",
+    "CREATE INDEX IF NOT EXISTS idx_demands_status ON demands(status,district,neighborhood)",
+  ];
+  for (const query of queries) await DB.prepare(query).run();
+
+  const additions = [
+    ["customers", "source", "TEXT DEFAULT ''"],
+    ["customers", "status", "TEXT DEFAULT 'Aktif'"],
+    ["customers", "updated_at", "TEXT"],
+    ["owners", "updated_at", "TEXT"],
+    ["properties", "listing_no", "TEXT"],
+    ["properties", "listing_date", "TEXT"],
+    ["properties", "source_url", "TEXT"],
+    ["properties", "location_text", "TEXT"],
+    ["properties", "updated_at", "TEXT"],
+    ["demands", "updated_at", "TEXT"],
+    ["tasks", "updated_at", "TEXT"],
+  ];
+  for (const [table, column, definition] of additions) await ensureColumn(DB, table, column, definition);
+
+  await DB.prepare("INSERT OR IGNORE INTO app_settings(key,value) VALUES('password_salt',?)").bind(INITIAL_PASSWORD_SALT).run();
+  await DB.prepare("INSERT OR IGNORE INTO app_settings(key,value) VALUES('password_hash',?)").bind(INITIAL_PASSWORD_HASH).run();
+}
+
+function ensureSchema(DB) {
+  if (!schemaPromises.has(DB)) {
+    const promise = buildSchema(DB).catch((error) => {
+      schemaPromises.delete(DB);
+      throw error;
+    });
+    schemaPromises.set(DB, promise);
+  }
+  return schemaPromises.get(DB);
+}
+
+async function settings(DB) {
+  const result = await DB.prepare("SELECT key,value FROM app_settings WHERE key IN ('password_salt','password_hash')").all();
+  return Object.fromEntries((result.results || []).map((row) => [row.key, row.value]));
+}
+
+async function isAuthenticated(request, DB) {
+  const token = parseCookies(request)[SESSION_COOKIE];
+  if (!token) return false;
+  const tokenHash = await sha256(token);
+  const result = await DB.prepare("SELECT id FROM sessions WHERE token_hash=? AND expires_at>?").bind(tokenHash, nowSeconds()).all();
+  return Boolean(result.results && result.results.length);
+}
+
+async function requireAuth(request, DB) {
+  if (!(await isAuthenticated(request, DB))) throw new HttpError(401, "Oturum süresi doldu. Lütfen yeniden giriş yapın.");
+}
+
+async function verifyPassword(DB, password) {
+  const current = await settings(DB);
+  if (!current.password_salt || !current.password_hash) return false;
+  const calculated = await derivePassword(String(password || ""), current.password_salt);
+  return safeEqual(calculated, current.password_hash);
+}
+
+async function createSession(DB) {
+  const token = randomToken();
+  const createdAt = nowSeconds();
+  await DB.prepare("DELETE FROM sessions WHERE expires_at<=?").bind(createdAt).run();
+  await DB.prepare("INSERT INTO sessions(id,token_hash,created_at,expires_at) VALUES(?,?,?,?)")
+    .bind(crypto.randomUUID(), await sha256(token), createdAt, createdAt + SESSION_TTL_SECONDS).run();
+  return token;
+}
+
+async function loginKey(request) {
+  const address = request.headers.get("cf-connecting-ip") || request.headers.get("x-forwarded-for") || "unknown";
+  return sha256(address.split(",")[0].trim());
+}
+
+async function loginAllowed(DB, ipHash) {
+  const cutoff = nowSeconds() - LOGIN_WINDOW_SECONDS;
+  await DB.prepare("DELETE FROM login_attempts WHERE attempted_at<?").bind(cutoff).run();
+  const result = await DB.prepare("SELECT COUNT(*) AS count FROM login_attempts WHERE ip_hash=? AND attempted_at>=?").bind(ipHash, cutoff).all();
+  return Number(result.results?.[0]?.count || 0) < LOGIN_ATTEMPT_LIMIT;
+}
+
+async function listAll(DB) {
+  const [customers, owners, properties, demands, tasks] = await Promise.all([
+    DB.prepare("SELECT * FROM customers ORDER BY COALESCE(updated_at,created_at) DESC,id DESC").all(),
+    DB.prepare("SELECT * FROM owners ORDER BY COALESCE(updated_at,created_at) DESC,id DESC").all(),
+    DB.prepare("SELECT * FROM properties ORDER BY COALESCE(updated_at,created_at) DESC,id DESC").all(),
+    DB.prepare("SELECT d.*,c.name customer_name,c.phone customer_phone FROM demands d LEFT JOIN customers c ON c.id=d.customer_id ORDER BY COALESCE(d.updated_at,d.created_at) DESC,d.id DESC").all(),
+    DB.prepare("SELECT t.*,c.name customer_name,p.title property_title FROM tasks t LEFT JOIN customers c ON c.id=t.customer_id LEFT JOIN properties p ON p.id=t.property_id ORDER BY CASE WHEN t.status='Tamamlandı' THEN 1 ELSE 0 END,COALESCE(t.due_date,'9999-12-31'),t.id DESC").all(),
+  ]);
+  return {
+    customers: customers.results || [],
+    owners: owners.results || [],
+    properties: properties.results || [],
+    demands: demands.results || [],
+    tasks: tasks.results || [],
+  };
+}
+
+async function insertEntity(DB, entity, input) {
+  const config = ENTITIES[entity];
+  const data = sanitizeEntity(entity, input);
+  const placeholders = config.fields.map(() => "?").join(",");
+  await DB.prepare(`INSERT INTO ${entity}(${config.fields.join(",")}) VALUES(${placeholders})`)
+    .bind(...config.fields.map((field) => data[field])).run();
+}
+
+async function updateEntity(DB, entity, id, input) {
+  const config = ENTITIES[entity];
+  const data = sanitizeEntity(entity, input);
+  const assignments = config.fields.map((field) => `${field}=?`).join(",");
+  await DB.prepare(`UPDATE ${entity} SET ${assignments},updated_at=CURRENT_TIMESTAMP WHERE id=?`)
+    .bind(...config.fields.map((field) => data[field]), id).run();
+}
+
+async function deleteEntity(DB, entity, id) {
+  if (entity === "customers") {
+    await DB.prepare("UPDATE demands SET customer_id=NULL,updated_at=CURRENT_TIMESTAMP WHERE customer_id=?").bind(id).run();
+    await DB.prepare("UPDATE tasks SET customer_id=NULL,updated_at=CURRENT_TIMESTAMP WHERE customer_id=?").bind(id).run();
+  }
+  if (entity === "properties") await DB.prepare("UPDATE tasks SET property_id=NULL,updated_at=CURRENT_TIMESTAMP WHERE property_id=?").bind(id).run();
+  await DB.prepare(`DELETE FROM ${entity} WHERE id=?`).bind(id).run();
+}
+
+async function restoreBackup(DB, body) {
+  if (body.confirm !== "RSM CRM") throw new HttpError(400, "Geri yükleme onayı geçersiz.");
+  const data = body.data;
+  if (!data || typeof data !== "object") throw new HttpError(400, "Yedek dosyası geçersiz.");
+  const total = Object.keys(ENTITIES).reduce((sum, entity) => {
+    if (!Array.isArray(data[entity])) throw new HttpError(400, `${entity} listesi eksik.`);
+    return sum + data[entity].length;
+  }, 0);
+  if (total > 5000) throw new HttpError(400, "Yedek dosyası tek işlem için çok büyük.");
+
+  const statements = [
+    DB.prepare("DELETE FROM tasks"),
+    DB.prepare("DELETE FROM demands"),
+    DB.prepare("DELETE FROM properties"),
+    DB.prepare("DELETE FROM owners"),
+    DB.prepare("DELETE FROM customers"),
+  ];
+  for (const entity of ["customers", "owners", "properties", "demands", "tasks"]) {
+    const config = ENTITIES[entity];
+    for (const record of data[entity]) {
+      const clean = sanitizeEntity(entity, record, true);
+      const fields = ["id", ...config.fields, "created_at", "updated_at"];
+      const placeholders = fields.map(() => "?").join(",");
+      statements.push(DB.prepare(`INSERT INTO ${entity}(${fields.join(",")}) VALUES(${placeholders})`)
+        .bind(
+          cleanNumber(record.id, "id"),
+          ...config.fields.map((field) => clean[field]),
+          cleanText(record.created_at) || new Date().toISOString(),
+          cleanText(record.updated_at) || cleanText(record.created_at) || new Date().toISOString(),
+        ));
+    }
+  }
+  await DB.batch(statements);
+}
+
+async function handleAuth(request, DB, path) {
+  if (path === "/api/auth/status" && request.method === "GET") return json({ authenticated: await isAuthenticated(request, DB) });
+
+  if (path === "/api/auth/login" && request.method === "POST") {
+    validateOrigin(request);
+    const ipHash = await loginKey(request);
+    if (!(await loginAllowed(DB, ipHash))) throw new HttpError(429, "Çok fazla hatalı deneme yapıldı. 15 dakika sonra yeniden deneyin.");
+    const body = await readBody(request);
+    if (!(await verifyPassword(DB, body.password))) {
+      await DB.prepare("INSERT INTO login_attempts(ip_hash,attempted_at) VALUES(?,?)").bind(ipHash, nowSeconds()).run();
+      throw new HttpError(401, "Parola hatalı.");
+    }
+    await DB.prepare("DELETE FROM login_attempts WHERE ip_hash=?").bind(ipHash).run();
+    const token = await createSession(DB);
+    return json({ ok: true }, 200, { "set-cookie": sessionCookie(token) });
+  }
+
+  if (path === "/api/auth/logout" && request.method === "POST") {
+    validateOrigin(request);
+    const token = parseCookies(request)[SESSION_COOKIE];
+    if (token) await DB.prepare("DELETE FROM sessions WHERE token_hash=?").bind(await sha256(token)).run();
+    return json({ ok: true }, 200, { "set-cookie": sessionCookie("", 0) });
+  }
+
+  if (path === "/api/auth/change-password" && request.method === "POST") {
+    validateOrigin(request);
+    await requireAuth(request, DB);
+    const body = await readBody(request);
+    const nextPassword = String(body.new_password || "");
+    if (!(await verifyPassword(DB, body.current_password))) throw new HttpError(401, "Mevcut parola hatalı.");
+    if (nextPassword.length < 10) throw new HttpError(400, "Yeni parola en az 10 karakter olmalıdır.");
+    const salt = randomToken(16);
+    const hash = await derivePassword(nextPassword, salt);
+    await DB.batch([
+      DB.prepare("UPDATE app_settings SET value=?,updated_at=CURRENT_TIMESTAMP WHERE key='password_salt'").bind(salt),
+      DB.prepare("UPDATE app_settings SET value=?,updated_at=CURRENT_TIMESTAMP WHERE key='password_hash'").bind(hash),
+      DB.prepare("DELETE FROM sessions"),
+    ]);
+    const token = await createSession(DB);
+    return json({ ok: true }, 200, { "set-cookie": sessionCookie(token) });
+  }
+
+  return null;
+}
+
+async function handleApi(request, DB, path) {
+  validateOrigin(request);
+  await requireAuth(request, DB);
+
+  if (path === "/api/all" && request.method === "GET") return json(await listAll(DB));
+
+  if (path === "/api/backup" && request.method === "GET") {
+    const backup = { format: "rsm-crm-backup", version: 1, exported_at: new Date().toISOString(), data: await listAll(DB) };
+    const date = new Date().toISOString().slice(0, 10);
+    return json(backup, 200, { "content-disposition": `attachment; filename="rsm-crm-yedek-${date}.json"` });
+  }
+
+  if (path === "/api/restore" && request.method === "POST") {
+    await restoreBackup(DB, await readBody(request));
+    return json({ ok: true });
+  }
+
+  let match = path.match(/^\/api\/(customers|owners|properties|demands|tasks)$/);
+  if (match && request.method === "POST") {
+    await insertEntity(DB, match[1], await readBody(request));
+    return json({ ok: true }, 201);
+  }
+
+  match = path.match(/^\/api\/(customers|owners|properties|demands|tasks)\/(\d+)$/);
+  if (match && request.method === "PUT") {
+    await updateEntity(DB, match[1], Number(match[2]), await readBody(request));
+    return json({ ok: true });
+  }
+  if (match && request.method === "DELETE") {
+    await deleteEntity(DB, match[1], Number(match[2]));
+    return json({ ok: true });
+  }
+
+  match = path.match(/^\/api\/tasks\/(\d+)\/(done|reopen)$/);
+  if (match && request.method === "POST") {
+    const status = match[2] === "done" ? "Tamamlandı" : "Açık";
+    await DB.prepare("UPDATE tasks SET status=?,updated_at=CURRENT_TIMESTAMP WHERE id=?").bind(status, Number(match[1])).run();
+    return json({ ok: true });
+  }
+
+  throw new HttpError(404, "İşlem bulunamadı.");
+}
+
+function staticResponse(body, type, cache = "public, max-age=3600") {
+  return new Response(body, { headers: securityHeaders(type, cache) });
 }
 
 export default {
   async fetch(request, env) {
-    if (!env.DB) {
-      return new Response("D1 binding eksik: Worker > Bindings bölümünde DB isimli D1 bağlantısı gerekli.", {
-        status: 500,
-        headers: { "content-type": "text/plain; charset=utf-8" }
-      });
+    try {
+      const url = new URL(request.url);
+      const path = url.pathname;
+
+      if (request.method === "GET") {
+        if (path === "/assets/app.css") return staticResponse(APP_CSS, "text/css; charset=utf-8");
+        if (path === "/assets/app.js") return staticResponse(APP_JS, "text/javascript; charset=utf-8");
+        if (path === "/manifest.webmanifest") return staticResponse(MANIFEST, "application/manifest+json; charset=utf-8");
+        if (path === "/sw.js") return staticResponse(SERVICE_WORKER, "text/javascript; charset=utf-8", "no-cache");
+        if (path === "/icon.svg") return staticResponse(ICON_SVG, "image/svg+xml; charset=utf-8", "public, max-age=86400");
+      }
+
+      if (!env.DB) throw new HttpError(500, "D1 bağlantısı eksik: DB isimli rsm-crm-db bağlantısı gerekli.");
+      await ensureSchema(env.DB);
+
+      if (path === "/" && request.method === "GET") return staticResponse(APP_HTML, "text/html; charset=utf-8", "no-store");
+
+      if (path.startsWith("/api/auth/")) {
+        const response = await handleAuth(request, env.DB, path);
+        if (response) return response;
+      }
+      if (path.startsWith("/api/")) return await handleApi(request, env.DB, path);
+
+      return new Response("Not found", { status: 404, headers: securityHeaders("text/plain; charset=utf-8") });
+    } catch (error) {
+      if (error instanceof HttpError) return json({ error: error.message }, error.status);
+      console.error("RSM CRM error", error);
+      return json({ error: "İşlem tamamlanamadı. Lütfen yeniden deneyin." }, 500);
     }
-
-    await schema(env.DB);
-    const url = new URL(request.url);
-
-    if (url.pathname === "/" && request.method === "GET") {
-      return new Response(decodeHTML(), {
-        headers: { "content-type": "text/html; charset=utf-8" }
-      });
-    }
-
-    if (!url.pathname.startsWith("/api/")) {
-      return new Response("Not found", { status: 404 });
-    }
-
-    const p = url.pathname.slice(4);
-
-    if (p === "/all" && request.method === "GET") {
-      const [a,b,c,d,t] = await Promise.all([
-        env.DB.prepare("SELECT * FROM customers ORDER BY id DESC").all(),
-        env.DB.prepare("SELECT * FROM owners ORDER BY id DESC").all(),
-        env.DB.prepare("SELECT * FROM properties ORDER BY id DESC").all(),
-        env.DB.prepare("SELECT d.*,c.name customer_name FROM demands d LEFT JOIN customers c ON c.id=d.customer_id ORDER BY d.id DESC").all(),
-        env.DB.prepare("SELECT t.*,c.name customer_name,p.title property_title FROM tasks t LEFT JOIN customers c ON c.id=t.customer_id LEFT JOIN properties p ON p.id=t.property_id ORDER BY CASE WHEN t.status='Tamamlandı' THEN 1 ELSE 0 END,COALESCE(t.due_date,'9999-12-31'),t.id DESC").all()
-      ]);
-      return json({
-        customers:a.results, owners:b.results, properties:c.results,
-        demands:d.results, tasks:t.results
-      });
-    }
-
-    let x;
-
-    if (p === "/customers" && request.method === "POST") {
-      x = await readBody(request);
-      await env.DB.prepare("INSERT INTO customers(name,phone,role,district,neighborhood,budget_min,budget_max,rooms,net_min,net_max,notes) VALUES(?,?,?,?,?,?,?,?,?,?,?)")
-        .bind(x.name,x.phone||"",x.role||"",x.district||"",x.neighborhood||"",x.budget_min||null,x.budget_max||null,x.rooms||"",x.net_min||null,x.net_max||null,x.notes||"").run();
-      return json({ok:true});
-    }
-
-    if (p === "/owners" && request.method === "POST") {
-      x = await readBody(request);
-      await env.DB.prepare("INSERT INTO owners(name,phone,district,neighborhood,notes) VALUES(?,?,?,?,?)")
-        .bind(x.name,x.phone||"",x.district||"",x.neighborhood||"",x.notes||"").run();
-      return json({ok:true});
-    }
-
-    if (p === "/properties" && request.method === "POST") {
-      x = await readBody(request);
-      await env.DB.prepare("INSERT INTO properties(title,type,status,property_type,city,district,neighborhood,site,price,rooms,gross_m2,net_m2,floor,owner_name,owner_phone,notes) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)")
-        .bind(x.title,x.type||"Satılık",x.status||"Aktif",x.property_type||"Daire",x.city||"Konya",x.district||"",x.neighborhood||"",x.site||"",x.price||null,x.rooms||"",x.gross_m2||null,x.net_m2||null,x.floor||"",x.owner_name||"",x.owner_phone||"",x.notes||"").run();
-      return json({ok:true});
-    }
-
-    if (p === "/demands" && request.method === "POST") {
-      x = await readBody(request);
-      await env.DB.prepare("INSERT INTO demands(customer_id,type,district,neighborhood,budget_min,budget_max,rooms,property_type,net_min,net_max,status,notes) VALUES(?,?,?,?,?,?,?,?,?,?,?,?)")
-        .bind(x.customer_id||null,x.type||"Satılık",x.district||"",x.neighborhood||"",x.budget_min||null,x.budget_max||null,x.rooms||"",x.property_type||"Daire",x.net_min||null,x.net_max||null,x.status||"Aktif",x.notes||"").run();
-      return json({ok:true});
-    }
-
-    if (p === "/tasks" && request.method === "POST") {
-      x = await readBody(request);
-      await env.DB.prepare("INSERT INTO tasks(title,due_date,type,customer_id,property_id,status,notes) VALUES(?,?,?,?,?,'Açık',?)")
-        .bind(x.title,x.due_date||null,x.type||"",x.customer_id||null,x.property_id||null,x.notes||"").run();
-      return json({ok:true});
-    }
-
-    let m = p.match(/^\/tasks\/(\d+)\/done$/);
-    if (m && request.method === "POST") {
-      await env.DB.prepare("UPDATE tasks SET status='Tamamlandı' WHERE id=?").bind(Number(m[1])).run();
-      return json({ok:true});
-    }
-
-    m = p.match(/^\/(customers|owners|properties|demands)\/(\d+)$/);
-    if (m && request.method === "DELETE") {
-      await env.DB.prepare("DELETE FROM " + m[1] + " WHERE id=?").bind(Number(m[2])).run();
-      return json({ok:true});
-    }
-
-    return new Response("Not found", { status: 404 });
-  }
+  },
 };
