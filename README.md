@@ -17,3 +17,6 @@ D1 binding adı: `DB`
 D1 database: `rsm-crm-db`
 
 `worker.js` üretim Worker kodudur.
+
+
+Build trigger: 2026-09-09
