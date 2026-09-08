@@ -1,0 +1,14 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "rsm-gayrimenkul-crm",
+  "main": "worker.js",
+  "compatibility_date": "2026-09-09",
+  "workers_dev": true,
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "rsm-crm-db",
+      "database_id": "427c40f7-ca93-49b4-bff0-7e3538dff3b2"
+    }
+  ]
+}
