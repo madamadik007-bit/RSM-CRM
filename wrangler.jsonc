@@ -2,7 +2,7 @@
   "$schema": "node_modules/wrangler/config-schema.json",
   "name": "rsm-gayrimenkul-crm",
   "main": "worker.js",
-  "compatibility_date": "2026-09-09",
+  "compatibility_date": "2026-09-01",
   "workers_dev": true,
   "d1_databases": [
     {
