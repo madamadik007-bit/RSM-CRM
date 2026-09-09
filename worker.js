@@ -187,6 +187,132 @@ function sanitizeEntity(entity, input, allowOrphanDemand = false) {
   return data;
 }
 
+
+function emsalNumber(value) {
+  if (value === null || value === undefined || value === "") return null;
+  let text = String(value).trim().replace(/\s+/g, "").replace(/TL/gi, "").replace(/₺/g, "");
+  if (!text) return null;
+  if (text.includes(",") && text.includes(".")) text = text.replace(/\./g, "").replace(",", ".");
+  else if (text.includes(",")) text = text.replace(",", ".");
+  else if (/^\d{1,3}(\.\d{3})+$/.test(text)) text = text.replace(/\./g, "");
+  text = text.replace(/[^\d.-]/g, "");
+  const number = Number(text);
+  return Number.isFinite(number) && number >= 0 ? number : null;
+}
+
+function emsalStatus(value) {
+  const text = cleanText(value, 200).toLocaleLowerCase("tr-TR");
+  return (text.includes("aktif") || text.includes("düştü")) ? "Aktif" : "Pasif";
+}
+
+function emsalPropertyType(title) {
+  const text = cleanText(title, 500).toLocaleLowerCase("tr-TR");
+  if (text.includes("villa")) return "Villa";
+  if (text.includes("arsa")) return "Arsa";
+  if (text.includes("dükkan") || text.includes("dukkan")) return "Dükkan";
+  if (text.includes("ofis")) return "Ofis";
+  if (text.includes("bina")) return "Bina";
+  if (text.includes("tarla")) return "Tarla";
+  return "Daire";
+}
+
+function emsalToProperty(row) {
+  const location = [row.mevki, row.konum_notu].map((v) => cleanText(v, 1000)).filter(Boolean).join(" · ");
+  const notes = [
+    row.portfoy_yetkisi ? "Portföy yetkisi: " + row.portfoy_yetkisi : "",
+    row.malik_notu ? "Malik notu: " + row.malik_notu : "",
+    row.analiz_notu ? "Analiz notu: " + row.analiz_notu : "",
+    row.aciklama ? row.aciklama : "",
+  ].map((v) => cleanText(v, 1600)).filter(Boolean).join("\n");
+  const typeText = cleanText(row.islem_turu, 100).toLocaleLowerCase("tr-TR");
+  return {
+    title: cleanText(row.baslik, 500) || (row.ilan_no ? "İlan " + row.ilan_no : "Emsal ilan"),
+    type: typeText.includes("kira") ? "Kiralık" : "Satılık",
+    status: emsalStatus(row.ilan_durumu),
+    property_type: emsalPropertyType(row.baslik),
+    city: cleanText(row.il, 100) || "Konya",
+    district: cleanText(row.ilce, 150),
+    neighborhood: cleanText(row.mahalle, 150),
+    site: cleanText(row.site_adi, 300),
+    price: emsalNumber(row.fiyat),
+    rooms: cleanText(row.oda, 100),
+    gross_m2: emsalNumber(row.brut),
+    net_m2: emsalNumber(row.net),
+    floor: cleanText(row.kat, 100),
+    owner_name: cleanText(row.malik_adi, 300),
+    owner_phone: cleanText(row.malik_telefon, 100),
+    listing_no: cleanText(row.ilan_no, 100),
+    listing_date: /^\d{4}-\d{2}-\d{2}/.test(String(row.ilan_tarihi_iso || "")) ? String(row.ilan_tarihi_iso).slice(0, 10) : "",
+    source_url: "",
+    location_text: cleanText(location, 2000),
+    notes: cleanText(notes, 4000),
+  };
+}
+
+async function listEmsal(emsalDB, crmDB, url) {
+  if (!emsalDB) throw new HttpError(503, "Emsal Analiz veritabanı bağlantısı henüz etkin değil.");
+  const q = cleanText(url.searchParams.get("q"), 200);
+  const status = cleanText(url.searchParams.get("status"), 100);
+  const requested = Number(url.searchParams.get("limit") || 250);
+  const limit = Math.max(1, Math.min(250, Number.isFinite(requested) ? Math.floor(requested) : 250));
+  const where = [];
+  const binds = [];
+  if (q) {
+    const like = "%" + q + "%";
+    where.push("(ilan_no LIKE ? OR baslik LIKE ? OR ilce LIKE ? OR mahalle LIKE ? OR site_adi LIKE ? OR mevki LIKE ? OR oda LIKE ? OR malik_adi LIKE ? OR malik_telefon LIKE ?)");
+    for (let i = 0; i < 9; i += 1) binds.push(like);
+  }
+  if (status) { where.push("ilan_durumu=?"); binds.push(status); }
+  const clause = where.length ? " WHERE " + where.join(" AND ") : "";
+  const rows = (await emsalDB.prepare("SELECT * FROM ilanlar" + clause + " ORDER BY id DESC LIMIT ?").bind(...binds, limit).all()).results || [];
+  const totalResult = await emsalDB.prepare("SELECT COUNT(*) AS count FROM ilanlar" + clause).bind(...binds).all();
+  const listingNos = rows.map((row) => cleanText(row.ilan_no, 100)).filter(Boolean);
+  const crmMap = new Map();
+  if (listingNos.length) {
+    const placeholders = listingNos.map(() => "?").join(",");
+    const matches = (await crmDB.prepare("SELECT id,listing_no FROM properties WHERE listing_no IN (" + placeholders + ")").bind(...listingNos).all()).results || [];
+    for (const match of matches) crmMap.set(String(match.listing_no), Number(match.id));
+  }
+  return {
+    bagli: true,
+    toplam: Number(totalResult.results?.[0]?.count || 0),
+    ilanlar: rows.map((row) => ({
+      ...row,
+      price: emsalNumber(row.fiyat),
+      gross_m2: emsalNumber(row.brut),
+      net_m2: emsalNumber(row.net),
+      crm_property_id: row.ilan_no ? (crmMap.get(String(row.ilan_no)) || null) : null,
+    })),
+  };
+}
+
+async function importEmsal(DB, emsalDB, id) {
+  if (!emsalDB) throw new HttpError(503, "Emsal Analiz veritabanı bağlantısı henüz etkin değil.");
+  const row = await emsalDB.prepare("SELECT * FROM ilanlar WHERE id=?").bind(id).first();
+  if (!row) throw new HttpError(404, "Emsal ilanı bulunamadı.");
+  const mapped = sanitizeEntity("properties", emsalToProperty(row));
+  let existing = null;
+  if (mapped.listing_no) existing = await DB.prepare("SELECT * FROM properties WHERE listing_no=? ORDER BY id LIMIT 1").bind(mapped.listing_no).first();
+  if (!existing) {
+    existing = await DB.prepare("SELECT * FROM properties WHERE title=? AND district=? AND neighborhood=? AND COALESCE(price,0)=COALESCE(?,0) ORDER BY id LIMIT 1")
+      .bind(mapped.title, mapped.district, mapped.neighborhood, mapped.price).first();
+  }
+  if (!existing) {
+    await insertEntity(DB, "properties", mapped);
+    const created = mapped.listing_no
+      ? await DB.prepare("SELECT id FROM properties WHERE listing_no=? ORDER BY id DESC LIMIT 1").bind(mapped.listing_no).first()
+      : await DB.prepare("SELECT id FROM properties ORDER BY id DESC LIMIT 1").first();
+    return { ok: true, created: true, property_id: Number(created?.id || 0) };
+  }
+  const merged = {};
+  for (const field of ENTITIES.properties.fields) merged[field] = existing[field] || mapped[field] || "";
+  if (mapped.price !== null) merged.price = mapped.price;
+  if (mapped.listing_date) merged.listing_date = mapped.listing_date;
+  if (!["Satıldı", "Kiralandı"].includes(existing.status)) merged.status = mapped.status || existing.status;
+  await updateEntity(DB, "properties", existing.id, merged);
+  return { ok: true, created: false, property_id: Number(existing.id) };
+}
+
 async function ensureColumn(DB, table, column, definition) {
   const info = await DB.prepare(`PRAGMA table_info(${table})`).all();
   if ((info.results || []).some((row) => row.name === column)) return;
@@ -431,11 +557,15 @@ async function handleAuth(request, DB, path) {
   return null;
 }
 
-async function handleApi(request, DB, path) {
+async function handleApi(request, DB, path, env) {
   validateOrigin(request);
   await requireAuth(request, DB);
 
   if (path === "/api/all" && request.method === "GET") return json(await listAll(DB));
+  if (path === "/api/emsal" && request.method === "GET") return json(await listEmsal(env.EMSAL_DB, DB, new URL(request.url)));
+
+  let emsalMatch = path.match(/^\/api\/emsal\/(\d+)\/import$/);
+  if (emsalMatch && request.method === "POST") return json(await importEmsal(DB, env.EMSAL_DB, Number(emsalMatch[1])));
 
   if (path === "/api/backup" && request.method === "GET") {
     const backup = { format: "rsm-crm-backup", version: 1, exported_at: new Date().toISOString(), data: await listAll(DB) };
@@ -501,7 +631,7 @@ export default {
         const response = await handleAuth(request, env.DB, path);
         if (response) return response;
       }
-      if (path.startsWith("/api/")) return await handleApi(request, env.DB, path);
+      if (path.startsWith("/api/")) return await handleApi(request, env.DB, path, env);
 
       return new Response("Not found", { status: 404, headers: securityHeaders("text/plain; charset=utf-8") });
     } catch (error) {
