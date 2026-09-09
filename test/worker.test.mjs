@@ -73,11 +73,11 @@ test("RSM CRM authentication and CRUD flow", async () => {
 
   response = await worker.fetch(makeRequest("/api/all"), env);
   assert.equal(response.status, 401);
-  assert.equal(env.DB.database.prepare("SELECT value FROM app_settings WHERE key='password_reset_20260909_v2'").get().value, "1");
+  assert.equal(env.DB.database.prepare("SELECT value FROM app_settings WHERE key='password_reset_20260909_v3'").get().value, "1");
 
   const password = "only-for-automated-tests";
   const salt = Buffer.from("rsm-crm-test-salt").toString("base64url");
-  const hash = pbkdf2Sync(password, Buffer.from(salt, "base64url"), 210000, 32, "sha256").toString("base64url");
+  const hash = pbkdf2Sync(password, Buffer.from(salt, "base64url"), 5000, 32, "sha256").toString("base64url");
   env.DB.database.prepare("UPDATE app_settings SET value=? WHERE key='password_salt'").run(salt);
   env.DB.database.prepare("UPDATE app_settings SET value=? WHERE key='password_hash'").run(hash);
 

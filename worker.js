@@ -2,10 +2,10 @@ import { APP_CSS, APP_HTML, APP_JS, ICON_SVG, MANIFEST, SERVICE_WORKER } from ".
 
 const INITIAL_PASSWORD_SALT = "Pi_mcJkHom4YbUMqWT_kng";
 const INITIAL_PASSWORD_HASH = "-A4qpnRdNo2BIXBcYB9nZfd7ASTJ63SgF543XNVYwRQ";
-const PASSWORD_RESET_SALT = "vwWaIEFKziqWagqLi3jLUQ";
-const PASSWORD_RESET_HASH = "arxNDkGREyZOaUBUJ5gj91i-LZXFWRjGxa0FLQyRx2s";
-const PASSWORD_RESET_KEY = "password_reset_20260909_v2";
-const PBKDF2_ITERATIONS = 210000;
+const PASSWORD_RESET_SALT = "5Fk45f6xQ_VeMyjnThDJFA";
+const PASSWORD_RESET_HASH = "gYi7eJ9MVMuMxpQbz_rLq4LzZrkaQEgLqh2e9y82u4s";
+const PASSWORD_RESET_KEY = "password_reset_20260909_v3";
+const PBKDF2_ITERATIONS = 5000;
 const SESSION_TTL_SECONDS = 60 * 60 * 24 * 30;
 const LOGIN_WINDOW_SECONDS = 15 * 60;
 const LOGIN_ATTEMPT_LIMIT = 8;
@@ -284,19 +284,6 @@ async function verifyPassword(DB, password) {
     return true;
   }
 
-  if (current.bootstrap_used !== "1") {
-    const bootstrapHash = await derivePassword(value, INITIAL_PASSWORD_SALT);
-    if (safeEqual(bootstrapHash, INITIAL_PASSWORD_HASH)) {
-      await DB.batch([
-        DB.prepare("UPDATE app_settings SET value=?,updated_at=CURRENT_TIMESTAMP WHERE key='password_salt'").bind(INITIAL_PASSWORD_SALT),
-        DB.prepare("UPDATE app_settings SET value=?,updated_at=CURRENT_TIMESTAMP WHERE key='password_hash'").bind(INITIAL_PASSWORD_HASH),
-        DB.prepare("UPDATE app_settings SET value='1',updated_at=CURRENT_TIMESTAMP WHERE key='bootstrap_used'"),
-        DB.prepare("DELETE FROM sessions"),
-      ]);
-      return true;
-    }
-  }
-
   return false;
 }
 
@@ -408,7 +395,7 @@ async function handleAuth(request, DB, path) {
     if (!(await verifyPassword(DB, body.password))) {
       if (!(await loginAllowed(DB, ipHash))) throw new HttpError(429, "Çok fazla hatalı deneme yapıldı. 15 dakika sonra yeniden deneyin.");
       await DB.prepare("INSERT INTO login_attempts(ip_hash,attempted_at) VALUES(?,?)").bind(ipHash, nowSeconds()).run();
-      throw new HttpError(401, "Parola hatalı (sürüm 09.09-B).");
+      throw new HttpError(401, "Parola hatalı (sürüm 09.09-C).");
     }
     await DB.prepare("DELETE FROM login_attempts WHERE ip_hash=?").bind(ipHash).run();
     const token = await createSession(DB);
