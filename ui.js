@@ -382,8 +382,27 @@ async function restoreFile(event){
   try{
     var backup=JSON.parse(await file.text());
     if(backup.format!=="rsm-crm-backup"||!backup.data)throw new Error("Bu dosya geçerli bir RSM CRM yedeği değil.");
+    var data=backup.data;
+    var emsalOnly=data.emsal_only===true&&Array.isArray(data.emsal);
+    if(emsalOnly){
+      if(!confirm("Bu dosya Emsal Havuzu aktarımıdır. CRM müşterileri, talepleri ve portföyleri silinmez. Emsal kayıtları parça parça aktarılacak. Devam edilsin mi?"))return;
+      busy(true);
+      var total=data.emsal.length;
+      var history=data.emsal_price_history||[];
+      el("modalBody").insertAdjacentHTML("afterbegin","<p class=\"restore-progress muted\">Emsal aktarımı hazırlanıyor…</p>");
+      var chunkSize=50;
+      var done=0;
+      for(var i=0;i<total;i+=chunkSize){
+        var payload={emsal_only:true,customers:[],owners:[],properties:[],demands:[],tasks:[],emsal:data.emsal.slice(i,i+chunkSize),emsal_price_history:history.slice(Math.floor(i*history.length/total),Math.floor((i+chunkSize)*history.length/total))};
+        await api("/restore",{method:"POST",body:JSON.stringify({confirm:"RSM CRM",data:payload})});
+        done=Math.min(i+chunkSize,total);
+        el("modalBody").querySelector(".restore-progress")?.replaceChildren(document.createTextNode("Emsal aktarılıyor: "+done+" / "+total));
+      }
+      closeModal();await load();await loadEmsal();toast(total+" Emsal kaydı CRM Emsal Havuzu'na aktarıldı.");
+      return;
+    }
     if(!confirm("Mevcut CRM kayıtları yedekteki kayıtlarla değiştirilecek. Devam edilsin mi?"))return;
-    busy(true);await api("/restore",{method:"POST",body:JSON.stringify({confirm:"RSM CRM",data:backup.data})});closeModal();await load();toast("Yedek başarıyla geri yüklendi.");
+    busy(true);await api("/restore",{method:"POST",body:JSON.stringify({confirm:"RSM CRM",data:data})});closeModal();await load();toast("Yedek başarıyla geri yüklendi.");
   }catch(error){toast(error.message,true)}finally{busy(false)}
 }
 
