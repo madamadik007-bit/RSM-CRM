@@ -9,6 +9,11 @@
       "binding": "DB",
       "database_name": "rsm-crm-db",
       "database_id": "427c40f7-ca93-49b4-bff0-7e3538dff3b2"
+    },
+    {
+      "binding": "EMSAL_DB",
+      "database_name": "emsal-analiz-db",
+      "database_id": "b5fccc60-95f7-4938-8e75-682980d68153"
     }
   ]
 }
