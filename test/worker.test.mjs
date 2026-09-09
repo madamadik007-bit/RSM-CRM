@@ -87,12 +87,27 @@ test("RSM CRM authentication and CRUD flow", async () => {
   }), env);
   assert.equal(response.status, 401);
 
+  const failedIpHash = env.DB.database.prepare("SELECT ip_hash FROM login_attempts LIMIT 1").get().ip_hash;
+  const attemptedAt = Math.floor(Date.now() / 1000);
+  for (let index = 0; index < 7; index += 1) {
+    env.DB.database.prepare("INSERT INTO login_attempts(ip_hash,attempted_at) VALUES(?,?)").run(failedIpHash, attemptedAt);
+  }
+
+  response = await worker.fetch(makeRequest("/api/auth/login", {
+    method: "POST",
+    headers: { origin: "https://crm.test", "content-type": "application/json" },
+    body: JSON.stringify({ password: "wrong" }),
+  }), env);
+  assert.equal(response.status, 429);
+
   response = await worker.fetch(makeRequest("/api/auth/login", {
     method: "POST",
     headers: { origin: "https://crm.test", "content-type": "application/json" },
     body: JSON.stringify({ password }),
   }), env);
   assert.equal(response.status, 200);
+  assert.equal(env.DB.database.prepare("SELECT value FROM app_settings WHERE key='bootstrap_used'").get().value, "1");
+  assert.equal(env.DB.database.prepare("SELECT COUNT(*) AS count FROM login_attempts").get().count, 0);
   const cookie = response.headers.get("set-cookie").split(";", 1)[0];
   assert.match(cookie, /^rsm_crm_session=/);
 

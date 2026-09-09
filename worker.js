@@ -226,6 +226,7 @@ async function buildSchema(DB) {
 
   await DB.prepare("INSERT OR IGNORE INTO app_settings(key,value) VALUES('password_salt',?)").bind(INITIAL_PASSWORD_SALT).run();
   await DB.prepare("INSERT OR IGNORE INTO app_settings(key,value) VALUES('password_hash',?)").bind(INITIAL_PASSWORD_HASH).run();
+  await DB.prepare("INSERT OR IGNORE INTO app_settings(key,value) VALUES('bootstrap_used','0')").run();
 }
 
 function ensureSchema(DB) {
@@ -240,7 +241,7 @@ function ensureSchema(DB) {
 }
 
 async function settings(DB) {
-  const result = await DB.prepare("SELECT key,value FROM app_settings WHERE key IN ('password_salt','password_hash')").all();
+  const result = await DB.prepare("SELECT key,value FROM app_settings WHERE key IN ('password_salt','password_hash','bootstrap_used')").all();
   return Object.fromEntries((result.results || []).map((row) => [row.key, row.value]));
 }
 
@@ -259,8 +260,29 @@ async function requireAuth(request, DB) {
 async function verifyPassword(DB, password) {
   const current = await settings(DB);
   if (!current.password_salt || !current.password_hash) return false;
-  const calculated = await derivePassword(String(password || ""), current.password_salt);
-  return safeEqual(calculated, current.password_hash);
+  const value = String(password || "");
+  const calculated = await derivePassword(value, current.password_salt);
+  if (safeEqual(calculated, current.password_hash)) {
+    if (current.bootstrap_used !== "1") {
+      await DB.prepare("UPDATE app_settings SET value='1',updated_at=CURRENT_TIMESTAMP WHERE key='bootstrap_used'").run();
+    }
+    return true;
+  }
+
+  if (current.bootstrap_used !== "1") {
+    const bootstrapHash = await derivePassword(value, INITIAL_PASSWORD_SALT);
+    if (safeEqual(bootstrapHash, INITIAL_PASSWORD_HASH)) {
+      await DB.batch([
+        DB.prepare("UPDATE app_settings SET value=?,updated_at=CURRENT_TIMESTAMP WHERE key='password_salt'").bind(INITIAL_PASSWORD_SALT),
+        DB.prepare("UPDATE app_settings SET value=?,updated_at=CURRENT_TIMESTAMP WHERE key='password_hash'").bind(INITIAL_PASSWORD_HASH),
+        DB.prepare("UPDATE app_settings SET value='1',updated_at=CURRENT_TIMESTAMP WHERE key='bootstrap_used'"),
+        DB.prepare("DELETE FROM sessions"),
+      ]);
+      return true;
+    }
+  }
+
+  return false;
 }
 
 async function createSession(DB) {
@@ -367,9 +389,9 @@ async function handleAuth(request, DB, path) {
   if (path === "/api/auth/login" && request.method === "POST") {
     validateOrigin(request);
     const ipHash = await loginKey(request);
-    if (!(await loginAllowed(DB, ipHash))) throw new HttpError(429, "Çok fazla hatalı deneme yapıldı. 15 dakika sonra yeniden deneyin.");
     const body = await readBody(request);
     if (!(await verifyPassword(DB, body.password))) {
+      if (!(await loginAllowed(DB, ipHash))) throw new HttpError(429, "Çok fazla hatalı deneme yapıldı. 15 dakika sonra yeniden deneyin.");
       await DB.prepare("INSERT INTO login_attempts(ip_hash,attempted_at) VALUES(?,?)").bind(ipHash, nowSeconds()).run();
       throw new HttpError(401, "Parola hatalı.");
     }
@@ -397,6 +419,7 @@ async function handleAuth(request, DB, path) {
     await DB.batch([
       DB.prepare("UPDATE app_settings SET value=?,updated_at=CURRENT_TIMESTAMP WHERE key='password_salt'").bind(salt),
       DB.prepare("UPDATE app_settings SET value=?,updated_at=CURRENT_TIMESTAMP WHERE key='password_hash'").bind(hash),
+      DB.prepare("UPDATE app_settings SET value='1',updated_at=CURRENT_TIMESTAMP WHERE key='bootstrap_used'"),
       DB.prepare("DELETE FROM sessions"),
     ]);
     const token = await createSession(DB);
