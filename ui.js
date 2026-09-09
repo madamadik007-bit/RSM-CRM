@@ -9,8 +9,8 @@ export const APP_HTML = `<!doctype html>
   <title>RSM Gayrimenkul CRM</title>
   <link rel="icon" href="/icon.svg" type="image/svg+xml">
   <link rel="manifest" href="/manifest.webmanifest">
-  <link rel="stylesheet" href="/assets/app.css?v=4">
-  <script src="/assets/app.js?v=4" defer></script>
+  <link rel="stylesheet" href="/assets/app.css?v=5">
+  <script src="/assets/app.js?v=5" defer></script>
 </head>
 <body>
   <main id="loginView" class="auth-shell" hidden>
@@ -40,6 +40,7 @@ export const APP_HTML = `<!doctype html>
         <button class="nav-item" data-tab="customers"><span>♙</span> Müşteriler</button>
         <button class="nav-item" data-tab="owners"><span>⌂</span> Mülk Sahipleri</button>
         <button class="nav-item" data-tab="properties"><span>▣</span> Portföyler</button>
+        <button class="nav-item" data-tab="emsal"><span>≋</span> Emsal Havuzu</button>
         <button class="nav-item" data-tab="demands"><span>◎</span> Talepler</button>
         <button class="nav-item" data-tab="tasks"><span>✓</span> Takipler</button>
         <button class="nav-item" data-tab="matches"><span>◇</span> Eşleştirme</button>
@@ -96,6 +97,13 @@ export const APP_HTML = `<!doctype html>
         <div class="card table-wrap"><table><thead><tr><th>Portföy</th><th>Tür / Durum</th><th>Bölge</th><th>Fiyat</th><th>Oda / m²</th><th>Mülk Sahibi</th><th></th></tr></thead><tbody id="propertyRows"></tbody></table></div>
       </section>
 
+      <section id="emsal" class="section">
+        <div class="info-card"><b>Emsal Havuzu</b><span>Emsal Analiz Pro veritabanındaki ilanları doğrudan gösterir. İsterseniz tek tuşla RSM Portföylerine alabilirsiniz; aynı ilan numarası ikinci kez oluşturulmaz.</span></div>
+        <div class="toolbar"><input id="emsalSearch" class="search" type="search" placeholder="İlan no, başlık, site, mahalle, malik ara"><select id="emsalStatusFilter" class="compact-select"><option value="">Tüm Durumlar</option><option value="Aktif ilan">Aktif ilan</option><option value="Fiyatı düştü">Fiyatı düştü</option><option value="Pasif ilan">Pasif ilan</option></select><button class="btn btn-soft" data-action="emsal-refresh" type="button">Yenile</button></div>
+        <div class="card-head"><h2 id="emsalCount">Emsal kayıtları</h2><small class="muted">Son 250 eşleşme gösterilir.</small></div>
+        <div class="card table-wrap"><table><thead><tr><th>İlan</th><th>Durum / Tür</th><th>Bölge / Site</th><th>Fiyat</th><th>Oda / m²</th><th>Malik</th><th></th></tr></thead><tbody id="emsalRows"></tbody></table></div>
+      </section>
+
       <section id="demands" class="section">
         <div class="toolbar"><input id="demandSearch" class="search" type="search" placeholder="Müşteri veya bölge ara"><button class="btn btn-primary" data-action="new" data-kind="demand">＋ Yeni Talep</button></div>
         <div class="card table-wrap"><table><thead><tr><th>Müşteri</th><th>Tür</th><th>Bölge</th><th>Bütçe</th><th>Oda / Net</th><th>Durum</th><th></th></tr></thead><tbody id="demandRows"></tbody></table></div>
@@ -144,13 +152,15 @@ export const APP_CSS = `:root{--navy:#0b2347;--blue:#1459a6;--blue2:#1d6fc4;--bg
 export const APP_JS = String.raw`"use strict";
 (function(){
 var S={customers:[],owners:[],properties:[],demands:[],tasks:[]};
+var E={ilanlar:[],toplam:0,bagli:false};
+var emsalSearchTimer=null;
 var currentTab="home";
 var installPrompt=null;
 var toastTimer=null;
 var plural={customer:"customers",owner:"owners",property:"properties",demand:"demands",task:"tasks"};
 var singular={customers:"customer",owners:"owner",properties:"property",demands:"demand",tasks:"task"};
-var titles={home:"Ana Panel",customers:"Müşteriler",owners:"Mülk Sahipleri",properties:"Portföyler",demands:"Talepler",tasks:"Takipler",matches:"Eşleştirme"};
-var subtitles={home:"RSM Gayrimenkul müşteri ve portföy yönetimi",customers:"Alıcı, satıcı, kiracı ve yatırımcı kayıtları",owners:"Mülk sahibi iletişim kayıtları",properties:"Satılık ve kiralık portföyler",demands:"Müşteri ihtiyaç ve bütçe kayıtları",tasks:"Arama, görüşme ve portföy takipleri",matches:"Aktif talepler için uygun portföyler"};
+var titles={home:"Ana Panel",customers:"Müşteriler",owners:"Mülk Sahipleri",properties:"Portföyler",emsal:"Emsal Havuzu",demands:"Talepler",tasks:"Takipler",matches:"Eşleştirme"};
+var subtitles={home:"RSM Gayrimenkul müşteri ve portföy yönetimi",customers:"Alıcı, satıcı, kiracı ve yatırımcı kayıtları",owners:"Mülk sahibi iletişim kayıtları",properties:"Satılık ve kiralık portföyler",emsal:"Emsal Analiz Pro ilan havuzuna doğrudan erişim",demands:"Müşteri ihtiyaç ve bütçe kayıtları",tasks:"Arama, görüşme ve portföy takipleri",matches:"Aktif talepler için uygun portföyler"};
 var kindNames={customer:"Müşteri",owner:"Mülk Sahibi",property:"Portföy",demand:"Talep",task:"Takip"};
 
 function el(id){return document.getElementById(id)}
@@ -245,6 +255,28 @@ function renderProperties(){
   el("propertyRows").innerHTML=rows.map(function(item){var link=item.source_url&&safeUrl(item.source_url)!=="#"?'<a class="external" target="_blank" rel="noopener" href="'+esc(safeUrl(item.source_url))+'">İlanı aç ↗</a>':"";return'<tr><td><b>'+esc(item.title)+'</b><small>'+esc(item.listing_no?"İlan No: "+item.listing_no:item.site||"")+'</small>'+link+'</td><td>'+badge(item.type||"-")+' '+badge(item.status||"-",item.status==="Aktif"?"success":"muted-badge")+'<small>'+esc(item.property_type||"")+'</small></td><td>'+esc(item.district||"-")+'<small>'+esc(item.neighborhood||"")+' '+esc(item.site||"")+'</small></td><td><b>'+money(item.price)+'</b></td><td>'+esc(item.rooms||"-")+'<small>'+esc(item.gross_m2||"-")+" brüt · "+esc(item.net_m2||"-")+' net</small></td><td>'+esc(item.owner_name||"-")+'<small>'+esc(item.owner_phone||"")+'</small></td><td><div class="actions"><button class="btn btn-soft btn-small" data-action="edit" data-kind="property" data-id="'+item.id+'">Düzenle</button><button class="btn btn-danger btn-small" data-action="delete" data-kind="property" data-id="'+item.id+'">Sil</button></div></td></tr>'}).join("")||emptyRow(7,"Portföy kaydı bulunamadı.")
 }
 
+async function loadEmsal(){
+  var query=encodeURIComponent(el("emsalSearch").value||"");var status=encodeURIComponent(el("emsalStatusFilter").value||"");
+  el("emsalRows").innerHTML=emptyRow(7,"Emsal kayıtları yükleniyor…");
+  try{E=await api("/emsal?q="+query+"&status="+status+"&limit=250",{method:"GET"});renderEmsal()}
+  catch(error){E={ilanlar:[],toplam:0,bagli:false};el("emsalRows").innerHTML=emptyRow(7,error.message);el("emsalCount").textContent="Emsal bağlantısı kurulamadı";toast(error.message,true)}
+}
+
+function renderEmsal(){
+  var rows=E.ilanlar||[];
+  el("emsalCount").textContent=(E.toplam||rows.length)+" emsal kaydı";
+  el("emsalRows").innerHTML=rows.map(function(item){
+    var already=item.crm_property_id?badge("Portföyde","success"):"";
+    return'<tr><td><b>'+esc(item.baslik||"Başlıksız ilan")+'</b><small>'+esc(item.ilan_no?"İlan No: "+item.ilan_no:"İlan no yok")+' · '+dateText(item.ilan_tarihi_iso||item.ilan_tarihi)+'</small></td><td>'+badge(item.ilan_durumu||"-",lower(item.ilan_durumu).includes("aktif")||lower(item.ilan_durumu).includes("düştü")?"success":"muted-badge")+' '+badge(item.islem_turu||"-")+'</td><td>'+esc(item.ilce||"-")+'<small>'+esc(item.mahalle||"")+' '+esc(item.site_adi||item.mevki||"")+'</small></td><td><b>'+money(item.price)+'</b></td><td>'+esc(item.oda||"-")+'<small>'+esc(item.gross_m2||"-")+" brüt · "+esc(item.net_m2||"-")+' net</small></td><td>'+esc(item.malik_adi||"-")+'<small>'+esc(item.malik_telefon||"")+'</small></td><td><div class="actions">'+already+'<button class="btn '+(item.crm_property_id?"btn-soft":"btn-primary")+' btn-small" data-action="emsal-import" data-id="'+item.id+'">'+(item.crm_property_id?"Güncelle":"Portföye Al")+'</button></div></td></tr>'
+  }).join("")||emptyRow(7,"Bu filtreye uygun emsal bulunamadı.");
+}
+
+async function importEmsal(id){
+  busy(true);
+  try{var result=await api("/emsal/"+id+"/import",{method:"POST",body:"{}"});await load();await loadEmsal();toast(result.created?"Emsal RSM portföyüne alındı.":"Mevcut portföy emsal bilgileriyle güncellendi.")}
+  catch(error){toast(error.message,true)}finally{busy(false)}
+}
+
 function renderDemands(){
   var query=lower(el("demandSearch").value);
   var rows=S.demands.filter(function(item){return!query||lower([item.customer_name,item.customer_phone,item.district,item.neighborhood,item.rooms,item.property_type].join(" ")).includes(query)});
@@ -327,7 +359,7 @@ async function toggleTask(id,status){
 }
 
 function changeTab(name){
-  currentTab=name;document.querySelectorAll(".section").forEach(function(section){section.classList.toggle("active",section.id===name)});document.querySelectorAll(".nav-item").forEach(function(button){button.classList.toggle("active",button.dataset.tab===name)});el("pageTitle").textContent=titles[name];el("pageSubtitle").textContent=subtitles[name];el("app").classList.remove("drawer-open");el("drawerBackdrop").hidden=true;if(name==="matches")renderMatches();window.scrollTo(0,0)
+  currentTab=name;document.querySelectorAll(".section").forEach(function(section){section.classList.toggle("active",section.id===name)});document.querySelectorAll(".nav-item").forEach(function(button){button.classList.toggle("active",button.dataset.tab===name)});el("pageTitle").textContent=titles[name];el("pageSubtitle").textContent=subtitles[name];el("app").classList.remove("drawer-open");el("drawerBackdrop").hidden=true;if(name==="matches")renderMatches();if(name==="emsal")loadEmsal();window.scrollTo(0,0)
 }
 
 async function downloadBackup(){
@@ -367,6 +399,8 @@ function bindEvents(){
     if(action==="edit")openForm(button.dataset.kind,button.dataset.id);
     if(action==="delete")deleteRecord(button.dataset.kind,button.dataset.id);
     if(action==="toggle-task")toggleTask(button.dataset.id,button.dataset.status);
+    if(action==="emsal-import")importEmsal(button.dataset.id);
+    if(action==="emsal-refresh")loadEmsal();
     if(action==="close-modal")closeModal();
     if(action==="backup")downloadBackup();
     if(action==="settings")openSettings();
@@ -378,6 +412,7 @@ function bindEvents(){
   el("menuButton").addEventListener("click",function(){var open=el("app").classList.toggle("drawer-open");el("drawerBackdrop").hidden=!open});
   el("drawerBackdrop").addEventListener("click",function(){el("app").classList.remove("drawer-open");el("drawerBackdrop").hidden=true});
   el("customerSearch").addEventListener("input",renderCustomers);el("ownerSearch").addEventListener("input",renderOwners);el("propertySearch").addEventListener("input",renderProperties);el("propertyStatusFilter").addEventListener("change",renderProperties);el("demandSearch").addEventListener("input",renderDemands);el("taskSearch").addEventListener("input",renderTasks);el("taskStatusFilter").addEventListener("change",renderTasks);
+  el("emsalSearch").addEventListener("input",function(){clearTimeout(emsalSearchTimer);emsalSearchTimer=setTimeout(loadEmsal,350)});el("emsalStatusFilter").addEventListener("change",loadEmsal);
   el("restoreFile").addEventListener("change",restoreFile);
   window.addEventListener("beforeinstallprompt",function(event){event.preventDefault();installPrompt=event;el("installButton").hidden=false});
   el("installButton").addEventListener("click",async function(){if(!installPrompt)return;installPrompt.prompt();await installPrompt.userChoice;installPrompt=null;el("installButton").hidden=true});
@@ -401,4 +436,4 @@ export const MANIFEST = JSON.stringify({
 
 export const ICON_SVG = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><rect width="512" height="512" rx="112" fill="#0b2347"/><rect x="80" y="80" width="352" height="352" rx="82" fill="#fff"/><text x="256" y="306" text-anchor="middle" font-family="Arial,sans-serif" font-size="128" font-weight="900" fill="#0b2347">RSM</text></svg>`;
 
-export const SERVICE_WORKER = String.raw`var CACHE="rsm-crm-v4";var SHELL=["/","/assets/app.css?v=4","/assets/app.js?v=4","/manifest.webmanifest","/icon.svg"];self.addEventListener("install",function(event){event.waitUntil(caches.open(CACHE).then(function(cache){return cache.addAll(SHELL)}).then(function(){return self.skipWaiting()}))});self.addEventListener("activate",function(event){event.waitUntil(caches.keys().then(function(keys){return Promise.all(keys.filter(function(key){return key!==CACHE}).map(function(key){return caches.delete(key)}))}).then(function(){return self.clients.claim()}))});self.addEventListener("fetch",function(event){var request=event.request;var url=new URL(request.url);if(request.method!=="GET"||url.origin!==location.origin||url.pathname.indexOf("/api/")===0)return;if(request.mode==="navigate"){event.respondWith(fetch(request).then(function(response){var copy=response.clone();caches.open(CACHE).then(function(cache){cache.put("/",copy)});return response}).catch(function(){return caches.match("/")}));return}event.respondWith(caches.match(request).then(function(cached){var network=fetch(request).then(function(response){if(response.ok)caches.open(CACHE).then(function(cache){cache.put(request,response.clone())});return response});return cached||network}))});`;
+export const SERVICE_WORKER = String.raw`var CACHE="rsm-crm-v5";var SHELL=["/","/assets/app.css?v=5","/assets/app.js?v=5","/manifest.webmanifest","/icon.svg"];self.addEventListener("install",function(event){event.waitUntil(caches.open(CACHE).then(function(cache){return cache.addAll(SHELL)}).then(function(){return self.skipWaiting()}))});self.addEventListener("activate",function(event){event.waitUntil(caches.keys().then(function(keys){return Promise.all(keys.filter(function(key){return key!==CACHE}).map(function(key){return caches.delete(key)}))}).then(function(){return self.clients.claim()}))});self.addEventListener("fetch",function(event){var request=event.request;var url=new URL(request.url);if(request.method!=="GET"||url.origin!==location.origin||url.pathname.indexOf("/api/")===0)return;if(request.mode==="navigate"){event.respondWith(fetch(request).then(function(response){var copy=response.clone();caches.open(CACHE).then(function(cache){cache.put("/",copy)});return response}).catch(function(){return caches.match("/")}));return}event.respondWith(caches.match(request).then(function(cached){var network=fetch(request).then(function(response){if(response.ok)caches.open(CACHE).then(function(cache){cache.put(request,response.clone())});return response});return cached||network}))});`;
