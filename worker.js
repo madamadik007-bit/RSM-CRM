@@ -249,8 +249,7 @@ function emsalToProperty(row) {
   };
 }
 
-async function listEmsal(emsalDB, crmDB, url) {
-  if (!emsalDB) throw new HttpError(503, "Emsal Analiz veritabanı bağlantısı henüz etkin değil.");
+async function listEmsal(DB, url) {
   const q = cleanText(url.searchParams.get("q"), 200);
   const status = cleanText(url.searchParams.get("status"), 100);
   const requested = Number(url.searchParams.get("limit") || 250);
@@ -264,44 +263,36 @@ async function listEmsal(emsalDB, crmDB, url) {
   }
   if (status) { where.push("ilan_durumu=?"); binds.push(status); }
   const clause = where.length ? " WHERE " + where.join(" AND ") : "";
-  const rows = (await emsalDB.prepare("SELECT * FROM ilanlar" + clause + " ORDER BY id DESC LIMIT ?").bind(...binds, limit).all()).results || [];
-  const totalResult = await emsalDB.prepare("SELECT COUNT(*) AS count FROM ilanlar" + clause).bind(...binds).all();
+  const rows = (await DB.prepare("SELECT * FROM emsal_listings" + clause + " ORDER BY id DESC LIMIT ?").bind(...binds, limit).all()).results || [];
+  const totalResult = await DB.prepare("SELECT COUNT(*) AS count FROM emsal_listings" + clause).bind(...binds).all();
   const listingNos = rows.map((row) => cleanText(row.ilan_no, 100)).filter(Boolean);
   const crmMap = new Map();
   if (listingNos.length) {
     const placeholders = listingNos.map(() => "?").join(",");
-    const matches = (await crmDB.prepare("SELECT id,listing_no FROM properties WHERE listing_no IN (" + placeholders + ")").bind(...listingNos).all()).results || [];
+    const matches = (await DB.prepare("SELECT id,listing_no FROM properties WHERE listing_no IN (" + placeholders + ")").bind(...listingNos).all()).results || [];
     for (const match of matches) crmMap.set(String(match.listing_no), Number(match.id));
   }
   return {
     bagli: true,
     toplam: Number(totalResult.results?.[0]?.count || 0),
-    ilanlar: rows.map((row) => ({
-      ...row,
-      price: emsalNumber(row.fiyat),
-      gross_m2: emsalNumber(row.brut),
-      net_m2: emsalNumber(row.net),
-      crm_property_id: row.ilan_no ? (crmMap.get(String(row.ilan_no)) || null) : null,
-    })),
+    ilanlar: rows.map((row) => {
+      let data = {};
+      try { data = JSON.parse(row.raw_json || "{}"); } catch {}
+      return { ...data, ...row, price: emsalNumber(row.fiyat), gross_m2: emsalNumber(row.brut), net_m2: emsalNumber(row.net), crm_property_id: row.ilan_no ? (crmMap.get(String(row.ilan_no)) || null) : null };
+    }),
   };
 }
 
-async function importEmsal(DB, emsalDB, id) {
-  if (!emsalDB) throw new HttpError(503, "Emsal Analiz veritabanı bağlantısı henüz etkin değil.");
-  const row = await emsalDB.prepare("SELECT * FROM ilanlar WHERE id=?").bind(id).first();
+async function importEmsal(DB, id) {
+  const row = await DB.prepare("SELECT * FROM emsal_listings WHERE id=?").bind(id).first();
   if (!row) throw new HttpError(404, "Emsal ilanı bulunamadı.");
   const mapped = sanitizeEntity("properties", emsalToProperty(row));
   let existing = null;
   if (mapped.listing_no) existing = await DB.prepare("SELECT * FROM properties WHERE listing_no=? ORDER BY id LIMIT 1").bind(mapped.listing_no).first();
-  if (!existing) {
-    existing = await DB.prepare("SELECT * FROM properties WHERE title=? AND district=? AND neighborhood=? AND COALESCE(price,0)=COALESCE(?,0) ORDER BY id LIMIT 1")
-      .bind(mapped.title, mapped.district, mapped.neighborhood, mapped.price).first();
-  }
+  if (!existing) existing = await DB.prepare("SELECT * FROM properties WHERE title=? AND district=? AND neighborhood=? AND COALESCE(price,0)=COALESCE(?,0) ORDER BY id LIMIT 1").bind(mapped.title, mapped.district, mapped.neighborhood, mapped.price).first();
   if (!existing) {
     await insertEntity(DB, "properties", mapped);
-    const created = mapped.listing_no
-      ? await DB.prepare("SELECT id FROM properties WHERE listing_no=? ORDER BY id DESC LIMIT 1").bind(mapped.listing_no).first()
-      : await DB.prepare("SELECT id FROM properties ORDER BY id DESC LIMIT 1").first();
+    const created = mapped.listing_no ? await DB.prepare("SELECT id FROM properties WHERE listing_no=? ORDER BY id DESC LIMIT 1").bind(mapped.listing_no).first() : await DB.prepare("SELECT id FROM properties ORDER BY id DESC LIMIT 1").first();
     return { ok: true, created: true, property_id: Number(created?.id || 0) };
   }
   const merged = {};
@@ -327,6 +318,10 @@ async function buildSchema(DB) {
     "CREATE TABLE IF NOT EXISTS properties(id INTEGER PRIMARY KEY AUTOINCREMENT,title TEXT NOT NULL,type TEXT,status TEXT,property_type TEXT,city TEXT,district TEXT,neighborhood TEXT,site TEXT,price INTEGER,rooms TEXT,gross_m2 REAL,net_m2 REAL,floor TEXT,owner_name TEXT,owner_phone TEXT,listing_no TEXT,listing_date TEXT,source_url TEXT,location_text TEXT,notes TEXT,created_at TEXT DEFAULT CURRENT_TIMESTAMP,updated_at TEXT DEFAULT CURRENT_TIMESTAMP)",
     "CREATE TABLE IF NOT EXISTS demands(id INTEGER PRIMARY KEY AUTOINCREMENT,customer_id INTEGER,type TEXT,district TEXT,neighborhood TEXT,budget_min INTEGER,budget_max INTEGER,rooms TEXT,property_type TEXT,net_min REAL,net_max REAL,status TEXT,notes TEXT,created_at TEXT DEFAULT CURRENT_TIMESTAMP,updated_at TEXT DEFAULT CURRENT_TIMESTAMP)",
     "CREATE TABLE IF NOT EXISTS tasks(id INTEGER PRIMARY KEY AUTOINCREMENT,title TEXT NOT NULL,due_date TEXT,type TEXT,customer_id INTEGER,property_id INTEGER,status TEXT DEFAULT 'Açık',notes TEXT,created_at TEXT DEFAULT CURRENT_TIMESTAMP,updated_at TEXT DEFAULT CURRENT_TIMESTAMP)",
+    "CREATE TABLE IF NOT EXISTS emsal_listings(id INTEGER PRIMARY KEY,ilan_no TEXT,baslik TEXT,ilan_tarihi TEXT,fiyat TEXT,il TEXT,ilce TEXT,mahalle TEXT,mevki TEXT,site_adi TEXT,brut TEXT,net TEXT,oda TEXT,bina_yasi TEXT,kat TEXT,kat_sayisi TEXT,esyali TEXT,kimden TEXT,malik_adi TEXT,malik_telefon TEXT,portfoy_yetkisi TEXT,malik_notu TEXT,konum_notu TEXT,aciklama TEXT,kaynak_metni TEXT,created_at TEXT,updated_at TEXT,analiz_notu TEXT,ilan_durumu TEXT,emlak_ofisi TEXT,islem_turu TEXT,ilan_tarihi_iso TEXT,sahibinden_mi INTEGER,malik_adi_elle TEXT,malik_telefon_elle TEXT,ilan_bitis_tarihi TEXT,raw_json TEXT NOT NULL)",
+    "CREATE TABLE IF NOT EXISTS emsal_price_history(id INTEGER PRIMARY KEY,ilan_id INTEGER,eski_fiyat TEXT,yeni_fiyat TEXT,degisim_tarihi TEXT)",
+    "CREATE INDEX IF NOT EXISTS idx_emsal_listing_no ON emsal_listings(ilan_no)",
+    "CREATE INDEX IF NOT EXISTS idx_emsal_region ON emsal_listings(ilce,mahalle,site_adi)",
     "CREATE TABLE IF NOT EXISTS app_settings(key TEXT PRIMARY KEY,value TEXT NOT NULL,updated_at TEXT DEFAULT CURRENT_TIMESTAMP)",
     "CREATE TABLE IF NOT EXISTS sessions(id TEXT PRIMARY KEY,token_hash TEXT UNIQUE NOT NULL,created_at INTEGER NOT NULL,expires_at INTEGER NOT NULL)",
     "CREATE TABLE IF NOT EXISTS login_attempts(id INTEGER PRIMARY KEY AUTOINCREMENT,ip_hash TEXT NOT NULL,attempted_at INTEGER NOT NULL)",
@@ -480,35 +475,40 @@ async function restoreBackup(DB, body) {
   if (body.confirm !== "RSM CRM") throw new HttpError(400, "Geri yükleme onayı geçersiz.");
   const data = body.data;
   if (!data || typeof data !== "object") throw new HttpError(400, "Yedek dosyası geçersiz.");
+  const emsalOnly = data.emsal_only === true;
+  let emsalImported = 0;
+  if (Array.isArray(data.emsal)) {
+    const fields = ["id","ilan_no","baslik","ilan_tarihi","fiyat","il","ilce","mahalle","mevki","site_adi","brut","net","oda","bina_yasi","kat","kat_sayisi","esyali","kimden","malik_adi","malik_telefon","portfoy_yetkisi","malik_notu","konum_notu","aciklama","kaynak_metni","created_at","updated_at","analiz_notu","ilan_durumu","emlak_ofisi","islem_turu","ilan_tarihi_iso","sahibinden_mi","malik_adi_elle","malik_telefon_elle","ilan_bitis_tarihi","raw_json"];
+    for (let i=0;i<data.emsal.length;i+=40) {
+      const chunk=data.emsal.slice(i,i+40);
+      await DB.batch(chunk.map((row)=>DB.prepare(`INSERT OR REPLACE INTO emsal_listings(${fields.join(",")}) VALUES(${fields.map(()=>"?").join(",")})`).bind(...fields.map((f)=>f==="raw_json"?JSON.stringify(row):row[f] ?? ""))));
+      emsalImported += chunk.length;
+    }
+    if (Array.isArray(data.emsal_price_history)) {
+      for (let i=0;i<data.emsal_price_history.length;i+=80) {
+        const chunk=data.emsal_price_history.slice(i,i+80);
+        await DB.batch(chunk.map((row)=>DB.prepare("INSERT OR REPLACE INTO emsal_price_history(id,ilan_id,eski_fiyat,yeni_fiyat,degisim_tarihi) VALUES(?,?,?,?,?)").bind(row.id ?? null,row.ilan_id ?? null,row.eski_fiyat ?? "",row.yeni_fiyat ?? "",row.degisim_tarihi ?? "")));
+      }
+    }
+  }
+  if (emsalOnly) return { ok: true, crmRestored: false, emsalImported };
   const total = Object.keys(ENTITIES).reduce((sum, entity) => {
     if (!Array.isArray(data[entity])) throw new HttpError(400, `${entity} listesi eksik.`);
     return sum + data[entity].length;
   }, 0);
   if (total > 5000) throw new HttpError(400, "Yedek dosyası tek işlem için çok büyük.");
-
-  const statements = [
-    DB.prepare("DELETE FROM tasks"),
-    DB.prepare("DELETE FROM demands"),
-    DB.prepare("DELETE FROM properties"),
-    DB.prepare("DELETE FROM owners"),
-    DB.prepare("DELETE FROM customers"),
-  ];
-  for (const entity of ["customers", "owners", "properties", "demands", "tasks"]) {
+  const statements = [DB.prepare("DELETE FROM tasks"),DB.prepare("DELETE FROM demands"),DB.prepare("DELETE FROM properties"),DB.prepare("DELETE FROM owners"),DB.prepare("DELETE FROM customers")];
+  for (const entity of ["customers","owners","properties","demands","tasks"]) {
     const config = ENTITIES[entity];
     for (const record of data[entity]) {
       const clean = sanitizeEntity(entity, record, true);
       const fields = ["id", ...config.fields, "created_at", "updated_at"];
       const placeholders = fields.map(() => "?").join(",");
-      statements.push(DB.prepare(`INSERT INTO ${entity}(${fields.join(",")}) VALUES(${placeholders})`)
-        .bind(
-          cleanNumber(record.id, "id"),
-          ...config.fields.map((field) => clean[field]),
-          cleanText(record.created_at) || new Date().toISOString(),
-          cleanText(record.updated_at) || cleanText(record.created_at) || new Date().toISOString(),
-        ));
+      statements.push(DB.prepare(`INSERT INTO ${entity}(${fields.join(",")}) VALUES(${placeholders})`).bind(cleanNumber(record.id,"id"),...config.fields.map((field)=>clean[field]),cleanText(record.created_at)||new Date().toISOString(),cleanText(record.updated_at)||cleanText(record.created_at)||new Date().toISOString()));
     }
   }
   await DB.batch(statements);
+  return { ok: true, crmRestored: true, emsalImported };
 }
 
 async function handleAuth(request, DB, path) {
@@ -562,10 +562,10 @@ async function handleApi(request, DB, path, env) {
   await requireAuth(request, DB);
 
   if (path === "/api/all" && request.method === "GET") return json(await listAll(DB));
-  if (path === "/api/emsal" && request.method === "GET") return json(await listEmsal(env.EMSAL_DB, DB, new URL(request.url)));
+  if (path === "/api/emsal" && request.method === "GET") return json(await listEmsal(DB, new URL(request.url)));
 
   let emsalMatch = path.match(/^\/api\/emsal\/(\d+)\/import$/);
-  if (emsalMatch && request.method === "POST") return json(await importEmsal(DB, env.EMSAL_DB, Number(emsalMatch[1])));
+  if (emsalMatch && request.method === "POST") return json(await importEmsal(DB, Number(emsalMatch[1])));
 
   if (path === "/api/backup" && request.method === "GET") {
     const backup = { format: "rsm-crm-backup", version: 1, exported_at: new Date().toISOString(), data: await listAll(DB) };
