@@ -13,6 +13,8 @@ test("UI assets compile and include the required responsive structure", () => {
   assert.match(APP_JS, /data-action="new-demand"/);
   assert.match(APP_JS, /fillDemandFromCustomer/);
   assert.match(APP_JS, /demandCustomerFields=\[[^\]]*"notes"/);
+  assert.match(APP_HTML, /data-tab="emsal"/);
+  assert.match(APP_JS, /emsal-import/);
   assert.doesNotMatch(APP_JS, /event\.target===el\("modal"\).*closeModal/);
 
   for (const id of [
