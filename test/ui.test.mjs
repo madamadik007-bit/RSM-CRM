@@ -10,6 +10,9 @@ test("UI assets compile and include the required responsive structure", () => {
   assert.equal(manifest.start_url, "/");
   assert.equal(manifest.display, "standalone");
   assert.match(APP_CSS, /@media\(max-width:820px\)/);
+  assert.match(APP_JS, /data-action="new-demand"/);
+  assert.match(APP_JS, /fillDemandFromCustomer/);
+  assert.doesNotMatch(APP_JS, /event\.target===el\("modal"\).*closeModal/);
 
   for (const id of [
     "loginView",
