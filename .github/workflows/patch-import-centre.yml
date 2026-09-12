@@ -9,13 +9,13 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Apply import centre patch
-        run: python3 scripts/patch-import-centre.py
+      - name: Apply Emsal display fix
+        run: python3 scripts/fix-emsal-display.py
       - name: Commit patched files
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add ui.js worker.js package.json
+          git add ui.js worker.js
           if git diff --cached --quiet; then echo "No changes"; exit 0; fi
-          git commit -m "Add Emsal JSON MHT Excel upload centre"
+          git commit -m "Fix Emsal display fields and status filters"
           git push
