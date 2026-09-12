@@ -276,7 +276,8 @@ async function listEmsal(DB, url) {
   }
   const clause = where.length ? " WHERE " + where.join(" AND ") : "";
   const rows = (await DB.prepare("SELECT * FROM emsal_listings" + clause + " ORDER BY id DESC LIMIT ?").bind(...binds, limit).all()).results || [];
-  const totalResult = await DB.prepare("SELECT COUNT(*) AS count FROM emsal_listings" + clause).bind(...binds).all();
+  const totalStatement = DB.prepare("SELECT COUNT(*) AS count FROM emsal_listings" + clause);
+  const totalResult = binds.length ? await totalStatement.bind(...binds).all() : await totalStatement.all();
   const listingNos = rows.map((row) => cleanText(row.ilan_no, 100)).filter(Boolean);
   const crmMap = new Map();
   if (listingNos.length) {
