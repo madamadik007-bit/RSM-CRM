@@ -599,7 +599,7 @@ async function importEmsalFile(DB,request){
   if(!rows.length) throw new HttpError(400,"Dosyada aktarılabilir emsal kaydı bulunamadı.");
   const fields=["id","ilan_no","baslik","ilan_tarihi","fiyat","il","ilce","mahalle","mevki","site_adi","brut","net","oda","bina_yasi","kat","kat_sayisi","esyali","kimden","malik_adi","malik_telefon","portfoy_yetkisi","malik_notu","konum_notu","aciklama","kaynak_metni","created_at","updated_at","analiz_notu","ilan_durumu","emlak_ofisi","islem_turu","ilan_tarihi_iso","sahibinden_mi","malik_adi_elle","malik_telefon_elle","ilan_bitis_tarihi","raw_json"];
   let imported=0;
-  for(let i=0;i<rows.length;i+=25){ const chunk=rows.slice(i,i+25); await DB.batch(chunk.map((row,j)=>{const normalized={...row,id:row.id??(Date.now()+i+j),raw_json:JSON.stringify(row),created_at:row.created_at||new Date().toISOString(),updated_at:new Date().toISOString()}; return DB.prepare(`INSERT OR REPLACE INTO emsal_listings(${fields.join(",")}) VALUES(${fields.map(()=>"?").join(",")})`).bind(...fields.map(f=>normalized[f]??""));})); imported+=chunk.length; }
+  for(let i=0;i<rows.length;i+=100){ const chunk=rows.slice(i,i+100); await DB.batch(chunk.map((row,j)=>{const normalized={...row,id:row.id??(Date.now()+i+j),raw_json:JSON.stringify(row),created_at:row.created_at||new Date().toISOString(),updated_at:new Date().toISOString()}; return DB.prepare(`INSERT OR REPLACE INTO emsal_listings(${fields.join(",")}) VALUES(${fields.map(()=>"?").join(",")})`).bind(...fields.map(f=>normalized[f]??""));})); imported+=chunk.length; }
   return {ok:true,imported};
 }
 
