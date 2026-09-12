@@ -262,7 +262,18 @@ async function listEmsal(DB, url) {
     where.push("(ilan_no LIKE ? OR baslik LIKE ? OR ilce LIKE ? OR mahalle LIKE ? OR site_adi LIKE ? OR mevki LIKE ? OR oda LIKE ? OR malik_adi LIKE ? OR malik_telefon LIKE ?)");
     for (let i = 0; i < 9; i += 1) binds.push(like);
   }
-  if (status) { where.push("ilan_durumu=?"); binds.push(status); }
+  if (status) {
+    const statusMap = {
+      "Aktif ilan": ["Aktif ilan", "Aktif"],
+      "Fiyatı düştü": ["Fiyatı düştü", "Aktif ilan", "Aktif"],
+      "Pasif ilan": ["Pasif ilan", "Pasif"],
+      "Aktif": ["Aktif ilan", "Aktif"],
+      "Pasif": ["Pasif ilan", "Pasif"],
+    };
+    const values = statusMap[status] || [status];
+    where.push("ilan_durumu IN (" + values.map(() => "?").join(",") + ")");
+    binds.push(...values);
+  }
   const clause = where.length ? " WHERE " + where.join(" AND ") : "";
   const rows = (await DB.prepare("SELECT * FROM emsal_listings" + clause + " ORDER BY id DESC LIMIT ?").bind(...binds, limit).all()).results || [];
   const totalResult = await DB.prepare("SELECT COUNT(*) AS count FROM emsal_listings" + clause).bind(...binds).all();
