@@ -479,8 +479,8 @@ async function restoreBackup(DB, body) {
   let emsalImported = 0;
   if (Array.isArray(data.emsal)) {
     const fields = ["id","ilan_no","baslik","ilan_tarihi","fiyat","il","ilce","mahalle","mevki","site_adi","brut","net","oda","bina_yasi","kat","kat_sayisi","esyali","kimden","malik_adi","malik_telefon","portfoy_yetkisi","malik_notu","konum_notu","aciklama","kaynak_metni","created_at","updated_at","analiz_notu","ilan_durumu","emlak_ofisi","islem_turu","ilan_tarihi_iso","sahibinden_mi","malik_adi_elle","malik_telefon_elle","ilan_bitis_tarihi","raw_json"];
-    for (let i=0;i<data.emsal.length;i+=10) {
-      const chunk=data.emsal.slice(i,i+10);
+    for (let i=0;i<data.emsal.length;i+=40) {
+      const chunk=data.emsal.slice(i,i+40);
       await DB.batch(chunk.map((row)=>DB.prepare(`INSERT OR REPLACE INTO emsal_listings(${fields.join(",")}) VALUES(${fields.map(()=>"?").join(",")})`).bind(...fields.map((f)=>f==="raw_json"?JSON.stringify(row):row[f] ?? ""))));
       emsalImported += chunk.length;
     }
