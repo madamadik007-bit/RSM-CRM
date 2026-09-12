@@ -129,6 +129,9 @@ export const APP_HTML = `<!doctype html>
   </div>
 
   <input id="restoreFile" type="file" accept="application/json,.json" hidden>
+  <input id="emsalJsonFile" type="file" accept="application/json,.json" hidden>
+  <input id="emsalMhtFile" type="file" accept="multipart/related,.mht,.mhtml,text/html" hidden>
+  <input id="emsalExcelFile" type="file" accept=".xlsx,.xls,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-excel" hidden>
   <div id="busy" class="busy" hidden><div class="spinner"></div><span>İşlem yapılıyor…</span></div>
   <div id="toast" class="toast" role="status" aria-live="polite" hidden></div>
 </body>
@@ -368,13 +371,27 @@ async function downloadBackup(){
 
 function openSettings(){
   el("modalTitle").textContent="Ayarlar";
-  el("modalBody").innerHTML='<div class="settings-grid"><section class="settings-panel"><h3>Parolayı Değiştir</h3><p>En az 10 karakterli, size özel bir parola belirleyin.</p><form id="passwordForm"><div class="form-grid">'+field("Mevcut Parola","current_password","password","",true)+field("Yeni Parola","new_password","password","",true)+'</div><div class="form-actions"><button class="btn btn-primary" type="submit">Parolayı Değiştir</button></div></form></section><section class="settings-panel"><h3>Veri Yedeği</h3><p>Tüm CRM kayıtlarını JSON dosyası olarak indirin veya daha önce alınmış yedeği geri yükleyin. Geri yükleme mevcut kayıtların yerine geçer.</p><div class="actions"><button class="btn btn-soft" type="button" data-action="backup">Yedek İndir</button><button class="btn btn-danger" type="button" data-action="choose-restore">Yedek Yükle</button></div></section></div>';
+  el("modalBody").innerHTML='<div class="settings-grid"><section class="settings-panel"><h3>Parolayı Değiştir</h3><p>En az 10 karakterli, size özel bir parola belirleyin.</p><form id="passwordForm"><div class="form-grid">'+field("Mevcut Parola","current_password","password","",true)+field("Yeni Parola","new_password","password","",true)+'</div><div class="form-actions"><button class="btn btn-primary" type="submit">Parolayı Değiştir</button></div></form></section><section class="settings-panel"><h3>Veri Yedeği</h3><p>Tüm CRM kayıtlarını JSON dosyası olarak indirin veya daha önce alınmış CRM yedeğini geri yükleyin.</p><div class="actions"><button class="btn btn-soft" type="button" data-action="backup">Yedek İndir</button><button class="btn btn-danger" type="button" data-action="choose-restore">CRM JSON Yükle</button></div></section><section class="settings-panel"><h3>Emsal Veri Aktarımı</h3><p>Emsal Havuzu için dosyaları ayrı ayrı yükleyin. Bu aktarım mevcut müşteri, mülk sahibi, talep ve portföy kayıtlarını silmez.</p><div class="actions"><button class="btn btn-soft" type="button" data-action="choose-emsal-json">Emsal JSON Yükle</button><button class="btn btn-soft" type="button" data-action="choose-emsal-mht">MHT Yükle</button><button class="btn btn-soft" type="button" data-action="choose-emsal-excel">Excel Yükle</button></div><p class="muted">JSON: Emsal Analiz Pro yedeği · MHT: ilan sayfası · Excel: emsal listesi</p></section></div>';
   openModal();
 }
 
 async function changePassword(event){
   if(event.target.id!=="passwordForm")return;event.preventDefault();var data=Object.fromEntries(new FormData(event.target).entries());
   busy(true);try{await api("/auth/change-password",{method:"POST",body:JSON.stringify(data)});closeModal();toast("Parola değiştirildi.")}catch(error){toast(error.message,true)}finally{busy(false)}
+}
+
+async function importEmsalFile(event,kind){
+  var file=event.target.files&&event.target.files[0];event.target.value="";if(!file)return;
+  var labels={json:"Emsal JSON",mht:"MHT",excel:"Excel"};
+  if(!confirm(labels[kind]+" dosyası Emsal Havuzu'na aktarılacak. Mevcut CRM kayıtları silinmez. Devam edilsin mi?"))return;
+  busy(true);
+  try{
+    var form=new FormData();form.append("file",file);form.append("kind",kind);
+    var response=await fetch("/api/emsal/import-file",{method:"POST",credentials:"same-origin",body:form});
+    var payload={};try{payload=await response.json()}catch{}
+    if(!response.ok)throw new Error(payload.error||"Dosya aktarılamadı.");
+    await load();await loadEmsal();closeModal();toast((payload.imported||0)+" Emsal kaydı aktarıldı.");
+  }catch(error){toast(error.message,true)}finally{busy(false)}
 }
 
 async function restoreFile(event){
@@ -424,6 +441,9 @@ function bindEvents(){
     if(action==="backup")downloadBackup();
     if(action==="settings")openSettings();
     if(action==="choose-restore")el("restoreFile").click();
+    if(action==="choose-emsal-json")el("emsalJsonFile").click();
+    if(action==="choose-emsal-mht")el("emsalMhtFile").click();
+    if(action==="choose-emsal-excel")el("emsalExcelFile").click();
     if(action==="logout")logout();
   });
   document.addEventListener("change",function(event){var form=event.target.closest&&event.target.closest("#recordForm");if(form&&form.dataset.kind==="demand"&&event.target.name==="customer_id")fillDemandFromCustomer(form,event.target.value)});
@@ -433,6 +453,9 @@ function bindEvents(){
   el("customerSearch").addEventListener("input",renderCustomers);el("ownerSearch").addEventListener("input",renderOwners);el("propertySearch").addEventListener("input",renderProperties);el("propertyStatusFilter").addEventListener("change",renderProperties);el("demandSearch").addEventListener("input",renderDemands);el("taskSearch").addEventListener("input",renderTasks);el("taskStatusFilter").addEventListener("change",renderTasks);
   el("emsalSearch").addEventListener("input",function(){clearTimeout(emsalSearchTimer);emsalSearchTimer=setTimeout(loadEmsal,350)});el("emsalStatusFilter").addEventListener("change",loadEmsal);
   el("restoreFile").addEventListener("change",restoreFile);
+  el("emsalJsonFile").addEventListener("change",function(e){importEmsalFile(e,"json")});
+  el("emsalMhtFile").addEventListener("change",function(e){importEmsalFile(e,"mht")});
+  el("emsalExcelFile").addEventListener("change",function(e){importEmsalFile(e,"excel")});
   window.addEventListener("beforeinstallprompt",function(event){event.preventDefault();installPrompt=event;el("installButton").hidden=false});
   el("installButton").addEventListener("click",async function(){if(!installPrompt)return;installPrompt.prompt();await installPrompt.userChoice;installPrompt=null;el("installButton").hidden=true});
 }

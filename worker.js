@@ -1,3 +1,4 @@
+import * as XLSX from "xlsx";
 import { APP_CSS, APP_HTML, APP_JS, ICON_SVG, MANIFEST, SERVICE_WORKER } from "./ui.js";
 
 const INITIAL_PASSWORD_SALT = "Pi_mcJkHom4YbUMqWT_kng";
@@ -557,12 +558,47 @@ async function handleAuth(request, DB, path) {
   return null;
 }
 
+
+function emsalFileRows(text){
+  const raw=String(text||"").replace(/\r/g,"");
+  const lines=raw.split("\n").map(x=>x.trim()).filter(Boolean);
+  const out=[];
+  for(const line of lines){
+    const clean=line.replace(/<[^>]+>/g," ").replace(/&nbsp;/gi," ").replace(/\s+/g," ").trim();
+    if(!clean) continue;
+    const price=(clean.match(/([0-9]{1,3}(?:[.][0-9]{3})+|[0-9]{6,})\s*(?:TL|₺)/i)||[])[1]||"";
+    const ilan=(clean.match(/(?:ilan no|ilan\s*#|listing)\s*[:#]?\s*([0-9]{7,})/i)||[])[1]||"";
+    const m2=(clean.match(/([0-9]{2,4})\s*m²/i)||[])[1]||"";
+    if(price||ilan||m2) out.push({baslik:clean.slice(0,500),ilan_no:ilan,fiyat:price,net:m2,kaynak_metni:clean,ilan_durumu:"Aktif ilan",il:"Konya"});
+  }
+  return out;
+}
+
+async function importEmsalFile(DB,request){
+  const form=await request.formData(); const file=form.get("file"); const kind=cleanText(form.get("kind"),20);
+  if(!(file instanceof File)) throw new HttpError(400,"Dosya bulunamadı.");
+  let rows=[];
+  if(kind==="json"){
+    const body=JSON.parse(await file.text());
+    const data=body.data||body; rows=Array.isArray(data.emsal)?data.emsal:Array.isArray(data.ilanlar)?data.ilanlar:[];
+  }else if(kind==="excel"){
+    const buffer=await file.arrayBuffer(); const wb=XLSX.read(buffer,{type:"array"});
+    for(const name of wb.SheetNames){ const sheet=XLSX.utils.sheet_to_json(wb.Sheets[name],{defval:""}); rows.push(...sheet.map(r=>({baslik:r.baslik||r["Başlık"]||r["İlan Başlığı"]||r.title||"Emsal Excel",ilan_no:r.ilan_no||r["İlan No"]||r["İlan no"]||"",fiyat:r.fiyat||r["Fiyat"]||r.price||"",il:r.il||r["İl"]||"Konya",ilce:r.ilce||r["İlçe"]||"",mahalle:r.mahalle||r["Mahalle"]||"",site_adi:r.site_adi||r["Site"]||r["Site Adı"]||"",oda:r.oda||r["Oda"]||r["Oda Sayısı"]||"",brut:r.brut||r["Brüt m²"]||r["Brüt"]||"",net:r.net||r["Net m²"]||r["Net"]||"",kat:r.kat||r["Kat"]||"",ilan_durumu:r.ilan_durumu||r["Durum"]||"Aktif ilan",kaynak_metni:JSON.stringify(r)}))); }
+  }else if(kind==="mht"){ rows=emsalFileRows(await file.text()); }
+  if(!rows.length) throw new HttpError(400,"Dosyada aktarılabilir emsal kaydı bulunamadı.");
+  const fields=["id","ilan_no","baslik","ilan_tarihi","fiyat","il","ilce","mahalle","mevki","site_adi","brut","net","oda","bina_yasi","kat","kat_sayisi","esyali","kimden","malik_adi","malik_telefon","portfoy_yetkisi","malik_notu","konum_notu","aciklama","kaynak_metni","created_at","updated_at","analiz_notu","ilan_durumu","emlak_ofisi","islem_turu","ilan_tarihi_iso","sahibinden_mi","malik_adi_elle","malik_telefon_elle","ilan_bitis_tarihi","raw_json"];
+  let imported=0;
+  for(let i=0;i<rows.length;i+=25){ const chunk=rows.slice(i,i+25); await DB.batch(chunk.map((row,j)=>{const normalized={...row,id:row.id??(Date.now()+i+j),raw_json:JSON.stringify(row),created_at:row.created_at||new Date().toISOString(),updated_at:new Date().toISOString()}; return DB.prepare(`INSERT OR REPLACE INTO emsal_listings(${fields.join(",")}) VALUES(${fields.map(()=>"?").join(",")})`).bind(...fields.map(f=>normalized[f]??""));})); imported+=chunk.length; }
+  return {ok:true,imported};
+}
+
 async function handleApi(request, DB, path, env) {
   validateOrigin(request);
   await requireAuth(request, DB);
 
   if (path === "/api/all" && request.method === "GET") return json(await listAll(DB));
   if (path === "/api/emsal" && request.method === "GET") return json(await listEmsal(DB, new URL(request.url)));
+  if (path === "/api/emsal/import-file" && request.method === "POST") return json(await importEmsalFile(DB, request));
 
   let emsalMatch = path.match(/^\/api\/emsal\/(\d+)\/import$/);
   if (emsalMatch && request.method === "POST") return json(await importEmsal(DB, Number(emsalMatch[1])));
